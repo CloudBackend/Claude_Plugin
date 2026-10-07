@@ -4,12 +4,14 @@ Everything needed to build a XIOS/3 application and get it onto CloudBackend Paa
 install, two MCP servers:
 
 - `cbemcp` — `upload_project` writes a project into the database, validating it against
-  the schema, and `deploy` publishes it
+  the schema, `delete_files` removes files, and `deploy` publishes it. `whoami`,
+  `list_projects`, `read_project`, `validate_project` and `list_deployments` look at
+  projects and deployments without changing anything
 - `xios` — the XIOS/3 documentation lookups: `xios_concepts`, `xios_list`,
   `xios_component`, `xios_operation`, `xios_function`, `xios_method`, `xios_event`,
   `xios_action` and `xios_icons`
-- the `xios-apps` skill — project layout, the manifest, and the rules that make a deploy
-  fail
+- the `xios-apps` skill — project layout, the manifest, the rules that make a deploy
+  fail, and when to ask before deploying or deleting
 
 The documentation tools are what keep the XML from being guesswork, so they ship together
 with the deploy tools rather than as a second install.

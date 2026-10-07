@@ -4,9 +4,9 @@ A Claude Code plugin marketplace with one plugin, `cloudbackend-paas`, for build
 applications and deploying them to CloudBackend PaaS. The plugin connects Claude to two
 MCP servers and adds a skill for the authoring workflow:
 
-- `cbemcp` — `upload_project` and `deploy`, at `https://mcp.cloudbackend.com/mcp/<tenant>`
+- `cbemcp` — reading, uploading and deploying projects, at `https://mcp.cloudbackend.com/mcp/<tenant>`
 - `xios` — the XIOS/3 documentation lookups, at `https://mcp.xios3.com/mcp`
-- `xios-apps` — project layout, the manifest, and when to ask before deploying
+- `xios-apps` — project layout, the manifest, and when to ask before deploying or deleting
 
 ## Installing
 

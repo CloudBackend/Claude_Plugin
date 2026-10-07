@@ -1,7 +1,7 @@
 {
   "name": "cloudbackend-paas",
   "description": "Build XIOS/3 applications and deploy them to CloudBackend PaaS: the documentation lookups, the upload and deploy tools, and a skill for the authoring workflow",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": {
     "name": "CloudBackend"
   },
