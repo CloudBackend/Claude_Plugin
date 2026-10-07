@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "cloudbackend",
+  "description": "Claude Code plugins for building on CloudBackend PaaS",
+  "owner": {
+    "name": "CloudBackend"
+  },
+  "plugins": [
+    {
+      "name": "cloudbackend-paas",
+      "description": "Build XIOS/3 applications and deploy them to CloudBackend PaaS: the documentation lookups, the upload and deploy tools, and a skill for the authoring workflow",
+      "author": {
+        "name": "CloudBackend"
+      },
+      "category": "development",
+      "source": "./plugins/cloudbackend-paas"
+    }
+  ]
+}

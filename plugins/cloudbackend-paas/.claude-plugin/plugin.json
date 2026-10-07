@@ -1,0 +1,16 @@
+{
+  "name": "cloudbackend-paas",
+  "description": "Build XIOS/3 applications and deploy them to CloudBackend PaaS: the documentation lookups, the upload and deploy tools, and a skill for the authoring workflow",
+  "version": "1.2.0",
+  "author": {
+    "name": "CloudBackend"
+  },
+  "userConfig": {
+    "tenant": {
+      "type": "string",
+      "title": "Tenant",
+      "description": "The CloudBackend PaaS tenant to deploy to. It also selects the Keycloak realm you log in to, so xios-mcp-client must be registered in that realm.",
+      "required": true
+    }
+  }
+}
