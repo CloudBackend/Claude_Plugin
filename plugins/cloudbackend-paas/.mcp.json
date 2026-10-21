@@ -4,16 +4,7 @@
       "type": "http",
       "url": "https://mcp.cloudbackend.com/mcp/${user_config.tenant}",
       "oauth": {
-        "clientId": "xios-mcp-client",
-        "callbackPort": 8080
-      }
-    },
-    "xios": {
-      "type": "http",
-      "url": "https://mcp.xios3.com/mcp",
-      "oauth": {
-        "clientId": "xios-mcp-client",
-        "callbackPort": 8080
+        "clientId": "mcp"
       }
     }
   }

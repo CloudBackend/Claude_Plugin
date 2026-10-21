@@ -5,27 +5,39 @@ description: Build or change a XIOS/3 application on CloudBackend PaaS - project
 
 # XIOS/3 applications
 
-This plugin provides two servers. `cbemcp` works with projects on CloudBackend PaaS:
-`whoami`, `list_projects`, `read_project`, `validate_project` and `list_deployments`
-only read, `upload_project` and `delete_files` change a project in the database, and
-`deploy` publishes it. `xios` answers questions about the framework: `xios_concepts`, `xios_list`, `xios_component`,
-`xios_operation`, `xios_function`, `xios_method`, `xios_event`, `xios_action` and
-`xios_icons`.
+The `cbemcp` server works with projects on CloudBackend PaaS: `whoami`, `list_projects`,
+`read_project`, `validate_project` and `list_deployments` only read, `upload_project` and
+`delete_files` change a project in the database, and `deploy` publishes it. The XIOS/3
+reference documentation ships with this skill, in `reference/`.
 
 ## Look it up, don't guess
 
 XIOS/3 is XML with a schema behind it, and attribute names do not follow from the tag
-names. When the `xios_*` tools are available, call `xios_component` for a component you
-have not used in this session and use the attributes it lists, and `xios_operation` before
-writing a process step. `xios_list` with `components`, `operations`, `functions`,
-`methods`, `events`, `actions` or `concepts` returns just the names, and `xios_concepts`
-takes topics such as `ui layout and views`, `process logic`, `data binding`,
-`aliases (variables)`, `expressions`, `rules`, `events`, `components`,
-`component patterns`, `styling and themes` and `advanced patterns`.
+names. Read the reference section for a component you have not used in this session and
+use the attributes it lists, and the one for an operation before writing a process step.
+The files are large, so grep for the heading and read from there rather than reading a
+whole file:
 
-If the `xios_*` tools are unavailable — the server not logged in, say — say so rather
-than guessing at attribute names: upload validates against the schema and a guess usually
-comes back as a validation failure.
+| Looking for            | File                         | Each entry starts with |
+|------------------------|------------------------------|------------------------|
+| a component            | `reference/ref-components.md` | `## <Name>`, eg. `## Grid` |
+| a process operation    | `reference/ref-operations.md` | `## <name>`, eg. `## callMethod` |
+| an expression function | `reference/ref-functions.md`  | `## <name>`, eg. `## concat` |
+| a component method     | `reference/ref-methods.md`    | `### <name>`, grouped under `## <Group> Methods` |
+| an event               | `reference/ref-events.md`     | `## <Name>`, eg. `## Select` |
+| an action              | `reference/ref-actions.md`    | `## <name>` |
+| how something works    | `reference/concepts.md`       | `## <Topic>` |
+| an icon                | `reference/icons-all.txt`, one name per line; `reference/icons.md` for the `icon://` parameters and icons by category | |
+
+`grep -n '^## ' <file>` lists the names in a file. The topics in `concepts.md` are Data
+Binding, Aliases (Variables), Expressions, Process Logic, UI Layout and Views, Rules,
+Events, Components, Styling and Themes, Component Patterns and Advanced Patterns. For an
+overview rather than one entry, `components.md`, `processes.md`, `rules.md` and
+`data-and-channels.md` are shorter guides to each area.
+
+If something is not in the reference, say so rather than guessing at attribute names:
+upload validates against the schema and a guess usually comes back as a validation
+failure.
 
 ## Project layout
 
