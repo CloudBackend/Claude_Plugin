@@ -119,16 +119,3 @@ it for everyone, since there is no default. It is read from user,
 
 Everyone who gets that settings file has the plugin on their next session. They still log
 in to `cbemcp` themselves.
-
-## Updating the XIOS skills
-
-The `xios-*` skills are copied unchanged from the plugin zip published at
-https://skills.xios3.com/, except that "the dashboard" is renamed CloudBackend PaaS. To
-pick up a new release, run from the repository root:
-
-```bash
-scripts/sync-xios-skills.sh                      # newest zip the site links to
-scripts/sync-xios-skills.sh xios-plugin-N.zip    # or a zip you already have
-```
-
-The version it synced is in `XIOS_SKILLS_VERSION`. Then release a new version.
