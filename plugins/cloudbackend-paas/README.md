@@ -24,7 +24,7 @@ If you installed the standalone `xios` plugin from skills.xios3.com into
 ## Installing
 
 ```
-/plugin marketplace add linushjeltman/cbe-connector
+/plugin marketplace add CloudBackend/Claude_Plugin
 /plugin install cloudbackend-paas@cloudbackend
 /mcp
 ```
@@ -96,7 +96,7 @@ Declare the marketplace and the plugin in managed or user settings instead:
     "cloudbackend": {
       "source": {
         "source": "github",
-        "repo": "linushjeltman/cbe-connector"
+        "repo": "CloudBackend/Claude_Plugin"
       }
     }
   },

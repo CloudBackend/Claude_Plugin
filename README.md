@@ -13,7 +13,7 @@ MCP server and adds skills for writing and shipping the application:
 ## Installing
 
 ```
-/plugin marketplace add linushjeltman/cbe-connector
+/plugin marketplace add CloudBackend/Claude_Plugin
 /plugin install cloudbackend-paas@cloudbackend
 ```
 
