@@ -7,39 +7,40 @@ description: Build or change a XIOS/3 application on CloudBackend PaaS - project
 
 The `cbemcp` server works with projects on CloudBackend PaaS: `whoami`, `list_projects`,
 `read_project`, `validate_project` and `list_deployments` only read, `upload_project` and
-`delete_files` change a project in the database, and `deploy` publishes it. The XIOS/3
-reference documentation ships with this skill, in `reference/`.
+`delete_files` change a project in the database, and `deploy` publishes it. This skill
+covers getting a project onto CloudBackend PaaS; writing the XML is for the XIOS skills
+that ship alongside it.
 
-## Look it up, don't guess
+## Write the XML with the XIOS skills
 
 XIOS/3 is XML with a schema behind it, and attribute names do not follow from the tag
-names. Read the reference section for a component you have not used in this session and
-use the attributes it lists, and the one for an operation before writing a process step.
-The files are large, so grep for the heading and read from there rather than reading a
-whole file:
+names. Before writing or changing XML, load the skill for that part and use only the
+current API it lists:
 
-| Looking for            | File                         | Each entry starts with |
-|------------------------|------------------------------|------------------------|
-| a component            | `reference/ref-components.md` | `## <Name>`, eg. `## Grid` |
-| a process operation    | `reference/ref-operations.md` | `## <name>`, eg. `## callMethod` |
-| an expression function | `reference/ref-functions.md`  | `## <name>`, eg. `## concat` |
-| a component method     | `reference/ref-methods.md`    | `### <name>`, grouped under `## <Group> Methods` |
-| an event               | `reference/ref-events.md`     | `## <Name>`, eg. `## Select` |
-| an action              | `reference/ref-actions.md`    | `## <name>` |
-| how something works    | `reference/concepts.md`       | `## <Topic>` |
-| an icon                | `reference/icons-all.txt`, one name per line; `reference/icons.md` for the `icon://` parameters and icons by category | |
+| Writing                                              | Skill          |
+|------------------------------------------------------|----------------|
+| the application, views, panels and Core components   | `xios-views`   |
+| processes, triggers, aliases, operations, `{...}`    | `xios-process` |
+| a theme or an app's CSS                              | `xios-theme`   |
+| a new component or operation of your own             | `xios-extend`  |
+| records on `tenant://`, `home://` or a group drive   | `xios-db`      |
 
-`grep -n '^## ' <file>` lists the names in a file. The topics in `concepts.md` are Data
-Binding, Aliases (Variables), Expressions, Process Logic, UI Layout and Views, Rules,
-Events, Components, Styling and Themes, Component Patterns and Advanced Patterns. For an
-overview rather than one entry, `components.md`, `processes.md`, `rules.md` and
-`data-and-channels.md` are shorter guides to each area.
+Check each file before uploading it with the validator that ships with `xios-views`:
 
-If something is not in the reference, say so rather than guessing at attribute names:
-upload validates against the schema and a guess usually comes back as a validation
-failure.
+```
+node <xios-views skill folder>/validator/cli.js <file.xml>
+```
+
+It needs only Node.js. The `xios-views` skill lists forms it wrongly reports as errors;
+`validate_project` is the schema check that counts for an upload.
+
+If something is not in the skills, say so rather than guessing at attribute names: upload
+validates against the schema and a guess usually comes back as a validation failure.
 
 ## Project layout
+
+An application can be one file with its views and processes inline, as `xios-views`
+shows, or split across files:
 
 ```
 index.xml              the application manifest, root tag <application>
@@ -48,7 +49,8 @@ processes/main.xml     root tag <process>
 locale/en_US.xml       optional
 ```
 
-The manifest is what ties it together, and references are relative to the project root:
+Deploying needs the manifest at `index.xml`. It ties the files together, and references
+are relative to the project root:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -60,29 +62,6 @@ The manifest is what ties it together, and references are relative to the projec
   <process xlink:type="simple" xlink:actuate="onLoad" xlink:href="processes/main.xml"/>
 </application>
 ```
-
-A view holds one `<panel>` (plus optional menus and toolbars before it), and panels nest:
-`type="rows"` stacks, `type="columns"` lays out horizontally, sizes are px, `%`, `auto` or
-`fill`. Give the view a `name`, `width` and `height`, and give every component a `name` so
-processes can address it.
-
-A process is triggers, steps and operations. A trigger names a view, a component and an
-event and activates a step by id; the step's operations run in order:
-
-```xml
-<process name="main">
-  <trigger view="helloView" component="greetButton" event="Select" step="greet"/>
-  <step id="greet">
-    <operation name="callMethod" value="#helloView#greeting">
-      <method name="setValue"><param type="string">Hello again</param></method>
-    </operation>
-  </step>
-</process>
-```
-
-`step id="start"` runs before any view loads, so it cannot touch components; use a view's
-`Loaded` event for anything that references them. Prefer actions over `callMethod` when an
-action exists for what you want, they are faster.
 
 ## Look before you change
 

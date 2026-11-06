@@ -1,7 +1,7 @@
 {
   "name": "cloudbackend-paas",
-  "description": "Build XIOS/3 applications and deploy them to CloudBackend PaaS: the upload and deploy tools, and a skill with the XIOS/3 reference and the authoring workflow",
-  "version": "1.3.0",
+  "description": "Build XIOS/3 applications and deploy them to CloudBackend PaaS: the upload and deploy tools, the PaaS workflow skill, and the XIOS skills (views, processes, themes, extensions, data) with the XIOS validator",
+  "version": "1.4.0",
   "author": {
     "name": "CloudBackend"
   },

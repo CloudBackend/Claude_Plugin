@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="unqualified">
+
+  <xs:import namespace="http://www.w3.org/1999/xlink"
+             schemaLocation="http://www.w3.org/1999/xlink.xsd"/>
+
+  <xs:include schemaLocation="view.xsd" />
+  <xs:include schemaLocation="process.xsd" />
+
+  <!-- Documents the open-area values; enforcement happens via assert on
+       t_settings, whose content is open (see below). -->
+  <xs:simpleType name="t_openArea">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="top" />
+      <xs:enumeration value="bottom" />
+      <xs:enumeration value="left" />
+      <xs:enumeration value="right" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="t_settings">
+    <xs:annotation>
+      <xs:documentation xml:lang="en" />
+    </xs:annotation>
+    <!-- Open content: production manifests carry application-specific settings
+         keys beside the framework's home/path/locale/open-area. The framework
+         keys are enforced by the asserts below instead of declarations. -->
+    <xs:sequence>
+      <xs:any namespace="##any" processContents="skip" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:assert test="count(home) &lt;= 1" />
+    <xs:assert test="count(path) &lt;= 1" />
+    <xs:assert test="count(locale) &lt;= 1" />
+    <xs:assert test="count(open-area) &lt;= 1" />
+    <xs:assert test="count(open-area[not(. = 'top' or . = 'bottom' or . = 'left' or . = 'right')]) = 0" />
+  </xs:complexType>
+
+  <xs:complexType name="t_about">
+    <xs:annotation>
+      <xs:documentation xml:lang="en" />
+    </xs:annotation>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="description" type="xs:string" />
+      <xs:element name="license">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Licence name as text content; xlink:href optionally links the licence document. xlink:type defaults to "simple" and may be omitted.</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attributeGroup ref="t_xlinkSimple"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="installed" type="xs:string" />
+    </xs:choice>
+    <xs:attribute name="logo" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">Path to the application logo shown in the about dialog.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="author" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="en" />
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="copyright" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="en" />
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="created" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="en" />
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="loader" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation xml:lang="en" />
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="publisher" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="en" />
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="revised" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="en" />
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="version" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="en" />
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <!-- The simple-link subset of W3C XLink, used to pull views, processes,
+       resources and licences in from separate documents. All optional:
+       xlink:type defaults to "simple". -->
+  <xs:attributeGroup name="t_xlinkSimple">
+    <xs:attribute ref="xlink:type"/>
+    <xs:attribute ref="xlink:href"/>
+    <xs:attribute ref="xlink:role"/>
+    <xs:attribute ref="xlink:arcrole"/>
+    <xs:attribute ref="xlink:title"/>
+    <xs:attribute ref="xlink:show"/>
+    <xs:attribute ref="xlink:actuate"/>
+  </xs:attributeGroup>
+
+  <xs:complexType name="t_resources">
+    <xs:annotation>
+      <xs:documentation xml:lang="en" />
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="item" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Temporary application data, either inline under a name or linked with xlink:href. Inline content is the application's own data and is not validated.</xs:documentation>
+        </xs:annotation>
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:any namespace="##any" processContents="skip" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:attribute name="name" type="xs:string" />
+          <xs:attributeGroup ref="t_xlinkSimple"/>
+          <xs:anyAttribute namespace="##any" processContents="skip" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="t_anyAttribute">
+    <xs:anyAttribute namespace="##other" processContents="skip" />
+  </xs:complexType>
+
+  <xs:complexType name="t_components">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Custom components bundled with the application.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="component">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="dependency" type="t_componentDependency" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="skin" minOccurs="0" maxOccurs="1">
+              <xs:complexType>
+                <xs:attribute name="href" type="xs:anyURI" use="required" />
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="style" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="href" type="xs:anyURI" use="required" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+              <xs:documentation xml:lang="en">Display / documentation name.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="tag" type="xs:string" use="required">
+            <xs:annotation>
+              <xs:documentation xml:lang="en">The XML tag name used in view UI XML (e.g. &lt;carousel/&gt;).</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="class" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation xml:lang="en">Exported JS class name the framework loader instantiates. For external components this is the ES-module exported class at href; for bundled components it is the name passed to boot.addComponent(). Omit for components without behaviour.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="href" type="xs:anyURI" use="optional">
+            <xs:annotation>
+              <xs:documentation xml:lang="en">URL of the JS module. Optional — components without behaviour (e.g. pure-XSL spinners) can omit it.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="container" type="xs:boolean" use="optional">
+            <xs:annotation>
+              <xs:documentation xml:lang="en">"true" if the component hosts children. The class must extend Container.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="use-rules" type="xs:boolean" use="optional">
+            <xs:annotation>
+              <xs:documentation xml:lang="en">"true" if the component uses the rules layer for rule-based data binding.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="t_componentDependency">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">An external script a custom component needs, loaded before it. Nests when a dependency has its own dependencies.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="dependency" type="t_componentDependency" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attribute name="href" type="xs:anyURI" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">URL of the script to load.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="symbol" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">The global the script exports.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="t_theme" mixed="true">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Theme definition; permissive content.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:any namespace="##any" processContents="skip" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:anyAttribute namespace="##any" processContents="skip" />
+  </xs:complexType>
+
+  <xs:complexType name="t_access">
+    <xs:annotation>
+      <xs:documentation xml:lang="en" />
+    </xs:annotation>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="application" type="t_anyAttribute" />
+      <xs:element name="view" type="t_anyAttribute" />
+      <xs:element name="process" type="t_anyAttribute" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="t_login">
+    <xs:annotation>
+      <xs:documentation xml:lang="en" />
+    </xs:annotation>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="logo" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="background" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="dark" type="xs:boolean" />
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="title" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="description" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="copyright" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="view" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="create" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="reset" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="client" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="eula" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="buttonColor" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="linkColor" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="button" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="createPrompt" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="support" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="tenant" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="username" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="password" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="signup" type="t_loginSignup" minOccurs="0" maxOccurs="1" />
+      <xs:element name="recovery" type="t_loginPage" minOccurs="0" maxOccurs="1" />
+      <xs:element name="newPassword" type="t_loginPage" minOccurs="0" maxOccurs="1" />
+    </xs:choice>
+    <xs:attribute name="session" type="xs:boolean" />
+  </xs:complexType>
+
+  <xs:complexType name="t_loginPage">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Texts of one page in the login flow.</xs:documentation>
+    </xs:annotation>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="title" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="description" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="button" type="xs:string" minOccurs="0" maxOccurs="1" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="t_loginSignup">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Texts and fields of the account creation page.</xs:documentation>
+    </xs:annotation>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="title" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="description" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="button" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="names" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="country" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="username" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="repeat" type="xs:string" minOccurs="0" maxOccurs="1" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="t_process">
+    <xs:complexContent>
+      <xs:extension base="process">
+        <xs:attribute name="step" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">Id of the step to start at when the xlinked process is invoked.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attributeGroup ref="t_xlinkSimple"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="t_appView">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">A view of the application: declared inline, or linked from a separate document with xlink:href.</xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="t_view">
+        <xs:attributeGroup ref="t_xlinkSimple"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:element name="application">
+    <xs:annotation>
+      <xs:documentation xml:lang="en" />
+    </xs:annotation>
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="share" type="xs:boolean" />
+        <xs:element name="settings" type="t_settings" />
+        <xs:element name="about" type="t_about" />
+        <xs:element name="components" type="t_components" />
+        <xs:element name="theme" type="t_theme" />
+        <xs:element name="style" type="t_style" />
+        <xs:element name="resources" type="t_resources" />
+        <xs:element name="access" type="t_access" />
+        <xs:element name="login" type="t_login" />
+        <xs:element name="view" type="t_appView" />
+        <xs:element name="process" type="t_process" />
+      </xs:choice>
+      <xs:attribute name="name" type="xs:string" use="required">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Name of the application</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="title" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Window title for the application.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="width" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Initial width of the application window.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="height" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Initial height of the application window.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="background" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Background applied to the application window.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="icon" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="en" />
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="theme" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="en" />
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="instances">
+        <xs:annotation>
+          <xs:documentation xml:lang="en" />
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:unsignedInt">
+            <xs:minInclusive value="0" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <!-- Localized twins, as on components. Must be last: a wildcard closes
+           the attribute list. -->
+      <xs:anyAttribute namespace="https://xios3.com/lang" processContents="lax"/>
+      <!-- With more than one view, every view must declare xlink:actuate so
+           the runtime knows when to load each one. A single view needs no
+           xlink attributes. -->
+      <xs:assert test="count(view) &lt;= 1 or count(view[not(@xlink:actuate)]) = 0" />
+      <xs:assert test="count(share) &lt;= 1" />
+      <xs:assert test="count(settings) &lt;= 1" />
+      <xs:assert test="count(about) &lt;= 1" />
+      <xs:assert test="count(components) &lt;= 1" />
+      <xs:assert test="count(theme) &lt;= 1" />
+      <xs:assert test="count(resources) &lt;= 1" />
+      <xs:assert test="count(access) &lt;= 1" />
+      <xs:assert test="count(login) &lt;= 1" />
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

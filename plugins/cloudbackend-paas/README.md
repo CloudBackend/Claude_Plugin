@@ -1,24 +1,30 @@
 # cloudbackend-paas
 
 Everything needed to build a XIOS/3 application and get it onto CloudBackend PaaS. One
-install, one MCP server and a skill:
+install, one MCP server and six skills:
 
 - `cbemcp` — `upload_project` writes a project into the database, validating it against
   the schema, `delete_files` removes files, and `deploy` publishes it. `whoami`,
   `list_projects`, `read_project`, `validate_project` and `list_deployments` look at
   projects and deployments without changing anything
 - the `xios-apps` skill — project layout, the manifest, the rules that make a deploy
-  fail, when to ask before deploying or deleting, and the XIOS/3 reference documentation
-  for components, operations, functions, methods, events, actions and icons
+  fail, and when to ask before deploying or deleting
+- the XIOS skills from [skills.xios3.com](https://skills.xios3.com/), which teach the
+  current XIOS/3 API: `xios-views` (views and the Core components, plus the XIOS
+  validator), `xios-process` (processes, operations, expressions), `xios-theme` (themes
+  and app CSS), `xios-extend` (your own components and operations) and `xios-db`
+  (datatypes, folders and searching; still a draft upstream)
 
-The reference is what keeps the XML from being guesswork. It ships as files inside the
-skill, which Claude searches and reads a section at a time, so it needs no server and no
-login.
+The XIOS skills are what keep the XML from being guesswork. They ship as files inside the
+plugin, so they need no server and no login. The validator needs Node.js.
+
+If you installed the standalone `xios` plugin from skills.xios3.com into
+`~/.claude/skills/xios/`, remove it, or the same skills load twice.
 
 ## Installing
 
 ```
-/plugin marketplace add CloudBackendAB/mcp-connector
+/plugin marketplace add linushjeltman/cbe-connector
 /plugin install cloudbackend-paas@cloudbackend
 /mcp
 ```
@@ -90,7 +96,7 @@ Declare the marketplace and the plugin in managed or user settings instead:
     "cloudbackend": {
       "source": {
         "source": "github",
-        "repo": "CloudBackendAB/mcp-connector"
+        "repo": "linushjeltman/cbe-connector"
       }
     }
   },
@@ -114,13 +120,15 @@ it for everyone, since there is no default. It is read from user,
 Everyone who gets that settings file has the plugin on their next session. They still log
 in to `cbemcp` themselves.
 
-## Updating the reference
+## Updating the XIOS skills
 
-The files in `skills/xios-apps/reference/` are copied from the `xios-docs` folder of
-xios-mcp. To pick up changes there, run from the repository root:
+The `xios-*` skills are copied unchanged from the plugin zip published at
+https://skills.xios3.com/, except that "the dashboard" is renamed CloudBackend PaaS. To
+pick up a new release, run from the repository root:
 
 ```bash
-scripts/sync-xios-docs.sh path/to/xios-mcp/xios-docs
+scripts/sync-xios-skills.sh                      # newest zip the site links to
+scripts/sync-xios-skills.sh xios-plugin-N.zip    # or a zip you already have
 ```
 
-and release a new version.
+The version it synced is in `XIOS_SKILLS_VERSION`. Then release a new version.

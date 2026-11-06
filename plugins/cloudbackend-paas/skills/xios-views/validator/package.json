@@ -1,0 +1,23 @@
+{
+  "name": "@xios/validator",
+  "version": "1.1.0",
+  "description": "Validator for XIOS/3 source files.",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://forgejo.xcerion.com/api/packages/XIOS3/npm/"
+  },
+  "repository": {
+    "url": "https://forgejo.xcerion.com/XIOS3/xios-core"
+  },
+  "scripts": {
+    "prepack": "node scripts/stage.js",
+    "postpack": "node scripts/stage.js clean"
+  },
+  "files": [ "lib", "cli.js", "schemas" ],
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.10"
+  },
+  "bin": {
+    "xios-validate": "cli.js"
+   }
+}

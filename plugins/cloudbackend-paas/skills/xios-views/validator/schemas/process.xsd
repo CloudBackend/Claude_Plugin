@@ -1,0 +1,1853 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.1" elementFormDefault="qualified">
+
+  <!-- ============================================================= -->
+  <!-- process scaffold (framework structure; not from the op docs)  -->
+  <!-- ============================================================= -->
+
+  <xs:complexType name="t_trigger">
+    <!-- Same <param> mechanism as <operation name="call">. -->
+    <xs:sequence>
+      <xs:element name="param" type="op_call__param" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="event" type="xs:string" use="required"/>
+    <xs:attribute name="step" type="xs:string" use="required"/>
+    <xs:attribute name="communicator" type="xs:string"/>
+    <xs:attribute name="component" type="xs:string"/>
+    <xs:attribute name="process" type="xs:string"/>
+    <xs:attribute name="view" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="t_step">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias"/>
+      <xs:element ref="operation"/>
+      <!-- Shorthand for <operation name="debug">, used at step level in
+           production process code. -->
+      <xs:element name="debug" type="t_stepDebug"/>
+      <xs:element name="if" type="t_if"/>
+    </xs:choice>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="description" type="xs:string"/>
+    <xs:attribute name="success" type="xs:string"/>
+    <xs:attribute name="error" type="xs:string"/>
+    <xs:attribute name="goto" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="t_stepDebug" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="value" type="xs:string"/>
+    <xs:anyAttribute namespace="##any" processContents="skip"/>
+  </xs:complexType>
+
+  <!-- Shorthand for <operation name="decision"> carrying a single when
+       statement: the attributes are the when's, the children are the branch
+       that runs when the test holds (PO_decision.js). -->
+  <xs:complexType name="t_if">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias"/>
+      <xs:element ref="operation"/>
+      <xs:element name="debug" type="t_stepDebug"/>
+      <xs:element name="if" type="t_if"/>
+    </xs:choice>
+    <xs:attribute name="exists" type="xs:boolean"/>
+    <!-- data: test against the document root instead of the operation's selection. -->
+    <xs:attribute name="model">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="data"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="test" type="xs:string"/>
+    <xs:attribute name="step" type="xs:string"/>
+    <xs:attribute name="value" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="t_decision">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="when" type="t_when"/>
+      <xs:element name="otherwise" type="t_otherwise"/>
+    </xs:choice>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="t_when">
+    <xs:attribute name="step" type="xs:string" use="required"/>
+    <xs:attribute name="exists" type="xs:boolean"/>
+    <xs:attribute name="test" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="t_otherwise">
+    <xs:attribute name="step" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:simpleType name="t_model">
+    <xs:restriction base="xs:string">
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="t_alias" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <!-- Not required: production process code declares a bare <alias/> and
+         assigns to it later. -->
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="model" type="t_model"/>
+    <xs:attribute name="mode" type="xs:string"/>
+    <xs:attribute name="title" type="xs:string"/>
+    <xs:attribute name="value" type="xs:string"/>
+    <xs:attribute name="when">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+
+  <!-- <operations> declares the custom operations an application provides.
+       The declared @name values become usable as <operation name="..."> in
+       steps (accepted as open content by the host validator). -->
+  <xs:complexType name="t_operations">
+    <xs:sequence>
+      <xs:element name="operation" type="t_operationDecl" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="t_operationDecl">
+    <xs:attribute name="name" type="t_operationNameCustom" use="required"/>
+    <xs:attribute name="href" type="xs:anyURI"/>
+    <xs:attribute name="class" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- Operations added by the project: any well-formed name; the schema cannot
+       know what a project registers. -->
+  <xs:simpleType name="t_operationNameCustom">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Za-z_][A-Za-z0-9_.\-]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- The built-in operation names. Closed on purpose so typos are caught.
+       EXTENDED AT DEPLOY TIME: the pre-validation schema rewrite appends an
+       enumeration per custom operation the application registers (via
+       <operations> or boot.addOperation), and may add matching xs:alternative
+       rules on the operation element below. -->
+  <xs:simpleType name="t_operationNameBuiltIn">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="action"/>
+      <xs:enumeration value="bind"/>
+      <xs:enumeration value="call"/>
+      <xs:enumeration value="callMethod"/>
+      <xs:enumeration value="callService"/>
+      <xs:enumeration value="change"/>
+      <xs:enumeration value="channel"/>
+      <xs:enumeration value="close"/>
+      <xs:enumeration value="config"/>
+      <xs:enumeration value="confirm"/>
+      <xs:enumeration value="create"/>
+      <xs:enumeration value="database"/>
+      <xs:enumeration value="debug"/>
+      <xs:enumeration value="decision"/>
+      <xs:enumeration value="download"/>
+      <xs:enumeration value="foreach"/>
+      <xs:enumeration value="friends"/>
+      <xs:enumeration value="groups"/>
+      <xs:enumeration value="login"/>
+      <xs:enumeration value="navigate"/>
+      <xs:enumeration value="open"/>
+      <xs:enumeration value="print"/>
+      <xs:enumeration value="rollBack"/>
+      <xs:enumeration value="save"/>
+      <xs:enumeration value="search"/>
+      <xs:enumeration value="setSelection"/>
+      <xs:enumeration value="share"/>
+      <xs:enumeration value="split"/>
+      <xs:enumeration value="stats"/>
+      <xs:enumeration value="system"/>
+      <xs:enumeration value="tenant"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="process">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="operations" type="t_operations"/>
+      <xs:element name="trigger" type="t_trigger"/>
+      <xs:element name="step" type="t_step"/>
+      <xs:element name="decision" type="t_decision"/>
+      <xs:element name="script" type="t_processScript"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="author" type="xs:string"/>
+    <xs:attribute name="created" type="xs:string"/>
+    <xs:attribute name="description" type="xs:string"/>
+    <xs:attribute name="revised" type="xs:string"/>
+    <!-- The step the process starts in (SYS_Process_getInitialStep). -->
+    <xs:attribute name="step" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:element name="process" type="process"/>
+
+
+  <!-- operation element: polymorphic on @name (XSD 1.1 CTA) -->
+  <xs:element name="operation" type="xs:anyType">
+    <xs:alternative test="@name='action'" type="op_action"/>
+    <xs:alternative test="@name='bind'" type="op_bind"/>
+    <xs:alternative test="@name='call'" type="op_call"/>
+    <xs:alternative test="@name='callMethod'" type="op_callMethod"/>
+    <xs:alternative test="@name='callService'" type="op_callService"/>
+    <xs:alternative test="@name='change'" type="op_change"/>
+    <xs:alternative test="@name='channel'" type="op_channel"/>
+    <xs:alternative test="@name='close'" type="op_close"/>
+    <xs:alternative test="@name='confirm'" type="op_confirm"/>
+    <xs:alternative test="@name='create'" type="op_create"/>
+    <xs:alternative test="@name='database'" type="op_database"/>
+    <xs:alternative test="@name='debug'" type="op_debug"/>
+    <xs:alternative test="@name='decision'" type="op_decision"/>
+    <xs:alternative test="@name='foreach'" type="op_foreach"/>
+    <xs:alternative test="@name='friends'" type="op_friends"/>
+    <xs:alternative test="@name='groups'" type="op_groups"/>
+    <xs:alternative test="@name='login'" type="op_login"/>
+    <xs:alternative test="@name='navigate'" type="op_navigate"/>
+    <xs:alternative test="@name='open'" type="op_open"/>
+    <xs:alternative test="@name='print'" type="op_print"/>
+    <xs:alternative test="@name='rollBack'" type="op_rollBack"/>
+    <xs:alternative test="@name='save'" type="op_save"/>
+    <xs:alternative test="@name='search'" type="op_search"/>
+    <xs:alternative test="@name='setSelection'" type="op_setSelection"/>
+    <xs:alternative test="@name='share'" type="op_share"/>
+    <xs:alternative test="@name='split'" type="op_split"/>
+    <xs:alternative test="@name='tenant'" type="op_tenant"/>
+    <!-- config, system and download (production operations without a typed
+         op_* model) and deploy-time-registered custom operations fall through
+         to op__any, whose name enumeration validates them. -->
+    <xs:alternative type="op__any"/>
+  </xs:element>
+  <!-- Generic child used by operation children whose content the schema does
+       not model in detail: any text content, open child elements. Attributes
+       are NOT open — they stay strictly validated. -->
+  <xs:complexType name="op__anyContent" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- A process-level script, inline or linked with href. -->
+  <xs:complexType name="t_processScript" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="href" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="op__any" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="t_operationNameBuiltIn" use="required"/>
+    <xs:anyAttribute namespace="##any" processContents="skip"/>
+  </xs:complexType>
+
+  <!-- operation: action -->
+  <xs:complexType name="op_action">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="component" type="op_action__component" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="view" type="op_action__view" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="action"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:assert test="count(component) &gt;= 1 or count(view) &gt;= 1"/>
+  </xs:complexType>
+  <xs:complexType name="op_action__component" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="action" type="xs:string" use="required"/>
+  </xs:complexType>
+  <!-- Targets the view the operation's value addresses, e.g.
+       <view action="focus"/>. -->
+  <xs:complexType name="op_action__view" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="action" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <!-- operation: bind -->
+  <xs:complexType name="op_bind">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="component" type="op_bind__component" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="paging" type="op_bind__paging" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="bind"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:assert test="count(component) &gt;= 1"/>
+  </xs:complexType>
+  <xs:complexType name="op_bind__component" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="view" type="xs:string" use="required"/>
+    <xs:attribute name="select" type="xs:string"/>
+    <xs:attribute name="model" default="default">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="transformer" type="xs:string"/>
+    <xs:attribute name="type" default="default">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="eval" type="xs:boolean" default="false"/>
+  </xs:complexType>
+  <xs:complexType name="op_bind__paging" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="size" type="xs:integer" use="required"/>
+    <xs:attribute name="ascending" type="xs:boolean" default="true"/>
+    <xs:attribute name="order" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- operation: call -->
+  <xs:complexType name="op_call">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="trigger" type="op_call__trigger" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="yield" type="op_call__yield" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="param" type="op_call__param" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="timer" type="op_call__timer" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="call"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_call__trigger" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="model" type="xs:string"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_call__yield" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_call__param" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_call__timer" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="alias" type="xs:string"/>
+    <xs:attribute name="interval" type="xs:string"/>
+    <xs:attribute name="wait" type="xs:integer"/>
+  </xs:complexType>
+
+  <!-- operation: callMethod -->
+  <xs:complexType name="op_callMethod">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="method" type="op_callMethod__method" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="callMethod"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:attribute name="wait" type="xs:boolean" default="false"/>
+    <xs:attribute name="then" type="xs:string"/>
+    <xs:assert test="count(method) &gt;= 1"/>
+  </xs:complexType>
+  <xs:complexType name="op_callMethod__method" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="param" type="op_callMethod__method__param" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="alias" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_callMethod__method__param" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" default="string">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+
+  <!-- operation: callService -->
+  <xs:complexType name="op_callService">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="body" type="op_callService__body" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="document" type="op_callService__document" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="expect" type="op_callService__expect" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="headers" type="op_callService__headers" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="method" type="op_callService__method" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="param" type="op_callService__param" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="silent" type="op_callService__silent" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="wait" type="op_callService__wait" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="only-url" type="op_callService__only-url" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="callService"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_callService__body" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="xs:string"/>
+    <xs:attribute name="eval" type="xs:string" default="true"/>
+  </xs:complexType>
+  <xs:complexType name="op_callService__document" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_callService__expect" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="attempts" type="xs:string" default="30"/>
+    <xs:attribute name="timeout" type="xs:string" default="10"/>
+  </xs:complexType>
+  <xs:complexType name="op_callService__headers" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_callService__method" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_callService__param" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_callService__silent" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_callService__wait" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_callService__only-url" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- operation: change -->
+  <xs:complexType name="op_change">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="store" type="op_change__store" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="move" type="op_change__move" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="delete" type="op_change__delete" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="change"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_change__store" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="model" type="op_change__model"/>
+    <xs:attribute name="select" type="xs:string"/>
+    <xs:attribute name="transformer" type="xs:string"/>
+    <xs:attribute name="type" type="xs:string" use="required"/>
+    <xs:attribute name="value" type="xs:string"/>
+  </xs:complexType>
+  <!-- What select is relative to (PO_change.js): data = the document root,
+       base = the event's xpath. Without it, the operation's value selection. -->
+  <xs:simpleType name="op_change__model">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="data"/>
+      <xs:enumeration value="base"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- Exactly one of before/after/into is the destination. -->
+  <xs:complexType name="op_change__move">
+    <xs:attribute name="select" type="xs:string" use="required"/>
+    <xs:attribute name="before" type="xs:string"/>
+    <xs:attribute name="after" type="xs:string"/>
+    <xs:attribute name="into" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_change__delete" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="model" type="op_change__model"/>
+    <xs:attribute name="select" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- operation: channel -->
+  <xs:complexType name="op_channel">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="name" type="op_channel__name" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="protocol" type="op_channel__protocol" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="adapter" type="op_channel__adapter" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="authentication" type="op_channel__authentication" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="title" type="op_channel__title" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="drive" type="op_channel__drive" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="channel"/>
+    <xs:attribute name="value" type="xs:string"/>
+    <xs:assert test="count(name) &gt;= 1"/>
+    <xs:assert test="count(protocol) &gt;= 1"/>
+  </xs:complexType>
+  <xs:complexType name="op_channel__name" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_channel__protocol" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_channel__adapter" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="path" type="xs:string"/>
+    <xs:attribute name="in" type="xs:string"/>
+    <xs:attribute name="out" type="xs:string"/>
+    <xs:attribute name="type">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+  <!-- Credentials for a channel; taken from production process code. -->
+  <xs:complexType name="op_channel__authentication" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_channel__title" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_channel__drive" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- operation: close -->
+  <xs:complexType name="op_close">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="mode" type="op_close__mode" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="close"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_close__mode" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- operation: confirm -->
+  <xs:complexType name="op_confirm">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="type" type="op_confirm__type" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="initial" type="op_confirm__initial" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="message" type="op_confirm__message" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="modal" type="op_confirm__modal" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="ok" type="op_confirm__ok" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="cancel" type="op_confirm__cancel" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="title" type="op_confirm__title" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="icon" type="op_confirm__icon" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="height" type="op_confirm__height" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="pattern" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="patternerror" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="maxlength" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="confirm"/>
+  </xs:complexType>
+  <xs:complexType name="op_confirm__type" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="value" default="message">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="op_confirm__initial" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_confirm__message" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_confirm__modal" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_confirm__ok" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="step" type="xs:string"/>
+    <xs:attribute name="text" type="xs:string" default="OK"/>
+  </xs:complexType>
+  <xs:complexType name="op_confirm__cancel" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="step" type="xs:string"/>
+    <xs:attribute name="text" type="xs:string" default="Cancel"/>
+  </xs:complexType>
+  <xs:complexType name="op_confirm__title" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_confirm__icon" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_confirm__height" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- operation: create -->
+  <xs:complexType name="op_create" mixed="true">
+    <xs:attribute name="name" type="xs:string" use="required" fixed="create"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:assert test="normalize-space(.) != ''"/>
+  </xs:complexType>
+
+  <!-- operation: database -->
+  <xs:complexType name="op_database">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="acl" type="op_database__acl" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="attach" type="op_database__attach" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="copy" type="op_database__copy" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="create" type="op_database__create" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="delete" type="op_database__delete" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="detach" type="op_database__detach" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="link" type="op_database__link" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="listen" type="op_database__listen" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="mount" type="op_database__mount" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="move" type="op_database__move" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="publish" type="op_database__publish" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="rename" type="op_database__rename" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="restore" type="op_database__restore" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="share" type="op_database__share" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="shares" type="op_database__shares" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="shortcut" type="op_database__shortcut" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="subscribe" type="op_database__subscribe" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="subscribers" type="op_database__subscribers" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="trashcan" type="op_database__trashcan" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="truncate" type="op_database__truncate" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="unlink" type="op_database__unlink" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="unlisten" type="op_database__unlisten" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="unmount" type="op_database__unmount" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="unpublish" type="op_database__unpublish" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="unshare" type="op_database__unshare" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="unsubscribe" type="op_database__unsubscribe" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="upload" type="op_database__upload" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="drive-alias" type="op_database__drive-alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="sync" type="op_database__sync" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="database"/>
+    <xs:attribute name="value" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__acl" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="user" type="op_database__acl__user" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="group" type="op_database__acl__group" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="role" type="op_database__acl__role" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="read" type="xs:boolean" use="required"/>
+    <xs:attribute name="write" type="xs:boolean" use="required"/>
+    <xs:attribute name="delete" type="xs:boolean" use="required"/>
+    <xs:attribute name="changeACL" type="xs:boolean" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__acl__user" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__acl__group" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__acl__role" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="group" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__attach" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="to" type="xs:string" use="required"/>
+    <xs:attribute name="slot" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__copy" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="to" type="xs:string" use="required"/>
+    <xs:attribute name="silent" type="xs:boolean"/>
+    <xs:attribute name="progress" type="xs:boolean"/>
+    <xs:attribute name="alias" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__create" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="author" type="op_database__create__author" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="summary" type="op_database__create__summary" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="acl" type="op_database__create__acl" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="index" type="op_database__create__index" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="content" type="op_database__create__content" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="type" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="alias" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="rename" default="false">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="path" type="xs:boolean"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__create__author" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__create__summary" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__create__acl" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:integer" use="required"/>
+    <xs:attribute name="read" type="xs:boolean" use="required"/>
+    <xs:attribute name="write" type="xs:boolean" use="required"/>
+    <xs:attribute name="delete" type="xs:boolean" use="required"/>
+    <xs:attribute name="changeACL" type="xs:boolean" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__create__index" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="key" type="op_database__create__index__key" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="op_database__create__index__key" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="index" type="xs:boolean" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__create__content" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="xs:string"/>
+    <xs:attribute name="eval" default="false">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="href" type="xs:string"/>
+    <xs:attribute name="datatype" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__delete" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="permanent" type="xs:boolean"/>
+    <xs:attribute name="silent" type="xs:boolean"/>
+    <xs:attribute name="progress" type="xs:boolean"/>
+    <xs:attribute name="alias" type="xs:string"/>
+    <xs:attribute name="missing" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__detach" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="slot" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__link" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="alias" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__listen" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="event" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="step" type="xs:string" use="required"/>
+    <xs:attribute name="subfolders" type="xs:boolean" default="false"/>
+    <xs:attribute name="xpath" type="xs:string"/>
+    <xs:attribute name="delay" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__mount" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="group" type="op_database__mount__group" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="database" type="op_database__mount__database" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="memory" type="op_database__mount__memory" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="local" type="op_database__mount__local" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="published" type="op_database__mount__published" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="friendly" type="xs:string"/>
+    <xs:attribute name="hidden" type="xs:string" default="false"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__mount__group" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__mount__database" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__mount__memory" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__mount__local" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__mount__published" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="groupid" type="xs:string"/>
+    <xs:attribute name="groupId" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="password" type="xs:string"/>
+    <xs:attribute name="tenant" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__move" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="to" type="xs:string" use="required"/>
+    <xs:attribute name="silent" type="xs:boolean"/>
+    <xs:attribute name="progress" type="xs:boolean"/>
+    <xs:attribute name="alias" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__publish" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="alias" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="suggest" type="xs:string"/>
+    <xs:attribute name="password" type="xs:string"/>
+    <xs:attribute name="visibility" default="public">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="access" default="read">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="description" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__rename" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="to" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__restore" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__share" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="use-selection" type="xs:boolean" default="true"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__shares" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="alias" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__shortcut" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="icon" type="op_database__shortcut__icon" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="target" type="op_database__shortcut__target" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="data" type="op_database__shortcut__data" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="startfolder" type="op_database__shortcut__startfolder" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="to" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__shortcut__icon" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__shortcut__target" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__shortcut__data" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__shortcut__startfolder" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_database__subscribe" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="userid" type="xs:integer"/>
+    <xs:attribute name="username" type="xs:string"/>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="password" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__subscribers" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="alias" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__trashcan" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="action" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="silent" type="xs:boolean" default="true"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__truncate" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="silent" type="xs:boolean" default="true"/>
+    <xs:attribute name="progress" type="xs:boolean" default="false"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__unlink" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__unlisten" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="event" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__unmount" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__unpublish" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="group" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__unshare" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="suggest" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__unsubscribe" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__upload" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="to" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__drive-alias" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="alias" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_database__sync" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="to" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- operation: debug -->
+  <xs:complexType name="op_debug" mixed="true">
+    <xs:attribute name="name" type="xs:string" use="required" fixed="debug"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <!-- operation: decision -->
+  <xs:complexType name="op_decision">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="when" type="op_decision__when" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="otherwise" type="op_decision__otherwise" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="decision"/>
+    <xs:attribute name="value" type="xs:string"/>
+    <xs:assert test="count(when) &gt;= 1"/>
+  </xs:complexType>
+  <xs:complexType name="op_decision__when" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="exists" type="xs:boolean" default="false"/>
+    <!-- data: test against the document root instead of the operation's selection (PO_decision.js). -->
+    <xs:attribute name="model">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="data"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="test" type="xs:string"/>
+    <xs:attribute name="step" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_decision__otherwise" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="step" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- operation: foreach -->
+  <xs:complexType name="op_foreach">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element ref="operation" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="if" type="t_if" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="foreach"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:assert test="count(operation) &gt;= 1 or count(if) &gt;= 1"/>
+  </xs:complexType>
+
+  <!-- operation: friends -->
+  <xs:complexType name="op_friends">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="create" type="op_friends__create" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="remove" type="op_friends__remove" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="friends"/>
+  </xs:complexType>
+  <xs:complexType name="op_friends__create" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_friends__remove" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="group" type="xs:string"/>
+    <xs:attribute name="user" type="xs:integer"/>
+  </xs:complexType>
+
+  <!-- operation: groups -->
+  <xs:complexType name="op_groups">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="accept" type="op_groups__accept" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="acceptRequest" type="op_groups__acceptRequest" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="add" type="op_groups__add" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="addAvatar" type="op_groups__addAvatar" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="ban" type="op_groups__ban" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="create" type="op_groups__create" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="delete" type="op_groups__delete" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="deleteAvatar" type="op_groups__deleteAvatar" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="invite" type="op_groups__invite" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="join" type="op_groups__join" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="kick" type="op_groups__kick" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="leave" type="op_groups__leave" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="list" type="op_groups__list" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="reject" type="op_groups__reject" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="request" type="op_groups__request" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="saveMeta" type="op_groups__saveMeta" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="status" type="op_groups__status" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="unban" type="op_groups__unban" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="addRole" type="op_groups__roleMember" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="removeRoleMember" type="op_groups__roleMember" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="groups"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__accept" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="to" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__acceptRequest" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="reason" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__add" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__addAvatar" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="height" type="xs:string"/>
+    <xs:attribute name="left" type="xs:string"/>
+    <xs:attribute name="to" type="xs:string"/>
+    <xs:attribute name="top" type="xs:string"/>
+    <xs:attribute name="width" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__ban" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="reason" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__create" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="xs:string" default="group"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="alias" type="xs:string"/>
+    <xs:attribute name="public" type="xs:string" default="private"/>
+    <xs:attribute name="applicant" type="xs:string" default="review"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__delete" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="xs:string" default="group"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__deleteAvatar" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="group" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__invite" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_groups__join" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="to" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__kick" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="xs:string" default="group"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="reason" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__leave" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_groups__list" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="xs:string"/>
+    <xs:attribute name="offset" type="xs:string"/>
+    <xs:attribute name="count" type="xs:string"/>
+    <xs:attribute name="responseAlias" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__reject" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="reason" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__request" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="reason" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__saveMeta" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_groups__status" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="message" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_groups__unban" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="reason" type="xs:string"/>
+  </xs:complexType>
+  <!-- Shared by addRole and removeRoleMember. -->
+  <xs:complexType name="op_groups__roleMember" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="memberName" type="xs:string"/>
+    <xs:attribute name="roleName" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- operation: login -->
+  <xs:complexType name="op_login">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="username" type="op_login__username" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="password" type="op_login__password" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="reset" type="op_login__reset" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="client" type="op_login__client" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="login"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:assert test="count(username) &gt;= 1"/>
+    <xs:assert test="count(password) &gt;= 1"/>
+  </xs:complexType>
+  <xs:complexType name="op_login__username" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_login__password" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_login__reset" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_login__client" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- operation: navigate -->
+  <xs:complexType name="op_navigate">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="call" type="op_navigate__call" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="navigate"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:assert test="count(call) &gt;= 1"/>
+  </xs:complexType>
+  <xs:complexType name="op_navigate__call" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="axis">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="element" type="xs:string"/>
+    <xs:attribute name="step" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- operation: open -->
+  <xs:complexType name="op_open">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="param" type="op_open__param" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="name" type="op_open__name" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="position" type="op_open__position" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="trigger" type="op_open__trigger" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="step" type="op_open__step" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="debug" type="op_open__debug" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="browser" type="op_open__browser" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="action" type="op_open__action" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="context" type="op_open__context" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="focus" type="op_open__focus" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="handle-close" type="op_open__handle-close" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="window" type="op_open__window" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="mode" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="dataDoc" type="op_open__dataDoc" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="open"/>
+    <xs:attribute name="value" type="xs:string"/>
+    <xs:attribute name="secure" type="xs:boolean" default="false"/>
+  </xs:complexType>
+  <xs:complexType name="op_open__param" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_open__name" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_open__position" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="x" type="xs:integer"/>
+    <xs:attribute name="y" type="xs:integer"/>
+    <xs:attribute name="rel" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_open__trigger" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="model" type="xs:string"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_open__dataDoc">
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="op_open__step" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_open__debug" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_open__browser" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="secure" type="xs:boolean"/>
+    <xs:attribute name="features" type="xs:string"/>
+    <xs:attribute name="href" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_open__action" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_open__context" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_open__focus" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_open__handle-close" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_open__window" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="width" type="xs:integer"/>
+    <xs:attribute name="height" type="xs:integer"/>
+    <xs:attribute name="left" type="xs:integer"/>
+    <xs:attribute name="top" type="xs:integer"/>
+  </xs:complexType>
+
+  <!-- operation: print -->
+  <xs:complexType name="op_print">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="transform" type="op_print__transform" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="print"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:attribute name="debug" type="xs:boolean" default="false"/>
+  </xs:complexType>
+  <xs:complexType name="op_print__transform" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="value" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- operation: rollBack -->
+  <xs:complexType name="op_rollBack">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="model" type="op_rollBack__model" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="documents" type="op_rollBack__documents" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="rollBack"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_rollBack__model" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_rollBack__documents" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- operation: save -->
+  <xs:complexType name="op_save">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="saveas" type="op_save__saveas" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="folder" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="title" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="filename" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="filter" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="type" type="op_save__type" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="rebind" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="create" type="op_save__create" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:assert test="count(create) &lt;= 1"/>
+    <xs:assert test="count(create) = 0 or count(saveas) = 0"/>
+    <xs:assert test="count(create) = 0 or count(folder) = 0"/>
+    <xs:assert test="count(create) = 0 or count(title) = 0"/>
+    <xs:assert test="count(create) = 0 or count(filename) = 0"/>
+    <xs:assert test="count(create) = 0 or count(filter) = 0"/>
+    <xs:assert test="count(create) = 0 or count(type) = 0"/>
+    <xs:assert test="count(create) = 0 or count(rebind) = 0"/>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="save"/>
+    <!-- true: never ask where to save, even for a new or local document (PO_save.js). -->
+    <xs:attribute name="silent">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="true"/>
+          <xs:enumeration value="false"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="op_save__saveas" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="path" type="xs:string"/>
+    <xs:attribute name="alias" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_save__type">
+    <xs:attribute name="mime" type="xs:string"/>
+    <xs:attribute name="namespace" type="xs:string"/>
+    <xs:attribute name="element" type="xs:string"/>
+  </xs:complexType>
+  <!-- Creates a new document at path instead of saving the document in value (PO_save.js). -->
+  <xs:complexType name="op_save__create">
+    <xs:attribute name="path" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <!-- operation: search -->
+  <xs:complexType name="op_search" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="document" type="op_search__document" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="output" type="op_search__output" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="elements" type="op_search__elements" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="search"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:assert test="normalize-space(.) != ''"/>
+  </xs:complexType>
+  <xs:complexType name="op_search__document" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="href" type="xs:string" use="required"/>
+    <xs:attribute name="xlink" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_search__output" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_search__elements" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="search" type="xs:string" use="required"/>
+    <xs:attribute name="ignore-elements" type="xs:string" use="required"/>
+    <xs:attribute name="ignore-terms" type="xs:string"/>
+  </xs:complexType>
+
+  <!-- operation: setSelection -->
+  <xs:complexType name="op_setSelection">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="component" type="op_setSelection__component" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="setSelection"/>
+    <xs:attribute name="value" type="xs:string"/>
+    <xs:assert test="count(component) &gt;= 1"/>
+  </xs:complexType>
+  <xs:complexType name="op_setSelection__component" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="item" type="op_setSelection__component__item" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="view" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <!-- Without an item child the selection is given directly on the
+         component. -->
+    <xs:attribute name="select" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_setSelection__component__item" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="select" type="xs:string"/>
+    <xs:attribute name="href" type="xs:string"/>
+    <xs:attribute name="eval" type="xs:boolean"/>
+  </xs:complexType>
+
+  <!-- operation: share -->
+  <xs:complexType name="op_share">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="view" type="op_share__view" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="zone" type="op_share__zone" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="share"/>
+    <xs:attribute name="value" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_share__view" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="action" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="direction">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="user" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_share__zone" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="direction" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="user" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <!-- operation: split -->
+  <xs:complexType name="op_split">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="value" type="op_split__value" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="document" type="op_split__document" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="token" type="op_split__token" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="name" type="op__anyContent" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="split"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:assert test="count(value) &gt;= 1"/>
+    <xs:assert test="count(document) &gt;= 1"/>
+    <xs:assert test="count(token) &gt;= 1"/>
+  </xs:complexType>
+  <xs:complexType name="op_split__value" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_split__document" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="op_split__token" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- operation: tenant -->
+  <xs:complexType name="op_tenant">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="alias" type="t_alias" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="createUser" type="op_tenant__createUser" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="deleteUser" type="op_tenant__deleteUser" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="deleteTenant" type="op_tenant__deleteTenant" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="agreement" type="op_tenant__agreement" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="bindDomain" type="op_tenant__bindDomain" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="binddomain" type="op_tenant__bindDomain" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="keyring" type="op_tenant__keyring" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="recover" type="op_tenant__recover" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="changePassword" type="op_tenant__changePassword" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="referral" type="op_tenant__referral" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="registerCert" type="op_tenant__registerCert" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="searchUser" type="op_tenant__searchUsers" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="searchUsers" type="op_tenant__searchUsers" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="setEmailCredentials" type="op_tenant__setEmailCredentials" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="unbindDomain" type="op_tenant__unbindDomain" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="webhookkey" type="op_tenant__webhookkey" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required" fixed="tenant"/>
+    <xs:attribute name="value" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__createUser" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="token" type="xs:string"/>
+    <xs:attribute name="username" type="xs:string"/>
+    <xs:attribute name="password" type="xs:string"/>
+    <xs:attribute name="firstname" type="xs:string"/>
+    <xs:attribute name="lastname" type="xs:string"/>
+    <xs:attribute name="email" type="xs:string"/>
+    <xs:attribute name="source" type="xs:string"/>
+    <xs:attribute name="responseAlias" type="xs:string"/>
+    <xs:attribute name="referralCode" type="xs:string"/>
+    <xs:attribute name="eulaVersion" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__deleteUser" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="xs:string" use="required"/>
+    <xs:attribute name="code" type="xs:string" use="required"/>
+    <xs:attribute name="username" type="xs:string" use="required"/>
+    <xs:attribute name="userid" type="xs:string" use="required"/>
+    <xs:attribute name="forgetuser" type="xs:string"/>
+    <xs:attribute name="deletecontent" type="xs:string"/>
+    <xs:attribute name="usedefault" type="xs:string"/>
+    <xs:attribute name="groupid" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__deleteTenant" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="code" type="xs:string"/>
+    <xs:attribute name="tenant" type="xs:string"/>
+    <xs:attribute name="username" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__agreement" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="password" type="xs:string"/>
+    <xs:attribute name="responseAlias" type="xs:string"/>
+    <xs:attribute name="username" type="xs:string"/>
+    <xs:attribute name="version" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__bindDomain" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="domain" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__keyring" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="delete" type="xs:string"/>
+    <xs:attribute name="id" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__recover" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="responseAlias" type="xs:string"/>
+    <xs:attribute name="tenant" type="xs:string"/>
+    <xs:attribute name="username" type="xs:string"/>
+    <xs:attribute name="email" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__changePassword" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="username" type="xs:string"/>
+    <xs:attribute name="code" type="xs:string"/>
+    <xs:attribute name="password" type="xs:string"/>
+    <xs:attribute name="tenant" type="xs:string"/>
+    <xs:attribute name="responseAlias" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__referral" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="amount" type="xs:string"/>
+    <xs:attribute name="enable" type="xs:string"/>
+    <xs:attribute name="max" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="responseAlias" type="xs:string"/>
+    <xs:attribute name="type" type="xs:string"/>
+    <xs:attribute name="variant" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__registerCert" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="server" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__searchUsers" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="count" type="xs:string"/>
+    <xs:attribute name="deleted" type="xs:string"/>
+    <xs:attribute name="groupid" type="xs:string"/>
+    <xs:attribute name="offset" type="xs:string"/>
+    <xs:attribute name="query" type="xs:string"/>
+    <xs:attribute name="responseAlias" type="xs:string"/>
+    <xs:attribute name="type" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__setEmailCredentials" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="apiKey" type="xs:string"/>
+    <xs:attribute name="host" type="xs:string"/>
+    <xs:attribute name="port" type="xs:string"/>
+    <xs:attribute name="username" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__unbindDomain" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="domain" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="op_tenant__webhookkey" mixed="true">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any namespace="##any" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="responseId" type="xs:string"/>
+    <xs:attribute name="type" type="xs:string"/>
+  </xs:complexType>
+</xs:schema>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:l="https://xios3.com/lang" targetNamespace="https://xios3.com/lang" elementFormDefault="qualified">
+
+    <xs:attribute name="text" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'text'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="placeholder" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'placeholder'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="post-label" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'post-label'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="pre-label" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'pre-label'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="post-text" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'post-text'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="pre-text" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'pre-text'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="title" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'title'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="value" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'value'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="default" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'default'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="label" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'default'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="src" type="xs:string">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Localization enabled version of the attribute 'src'</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+
+</xs:schema>
