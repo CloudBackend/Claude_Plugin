@@ -1,13 +1,14 @@
 ---
 name: xios-apps
-description: Build or change a XIOS/3 application on CloudBackend PaaS - project layout, looking up components and operations before writing XML, reading existing projects, then upload_project and deploy. Use whenever the task involves XIOS/3 views, processes, an application manifest (index.xml), or a project or deployment on CloudBackend PaaS.
+description: Build or change a XIOS/3 application on CloudBackend PaaS - project layout, looking up components and operations before writing XML, finding and reading existing projects (home, tenant or a project group), then upload_project and deploy. Use whenever the task involves XIOS/3 views, processes, an application manifest (index.xml), or a project, project group or deployment on CloudBackend PaaS.
 ---
 
 # XIOS/3 applications
 
 The `cbemcp` server works with projects on CloudBackend PaaS: `whoami`, `list_projects`,
-`read_project`, `validate_project` and `list_deployments` only read, `upload_project` and
-`delete_files` change a project in the database, and `deploy` publishes it. This skill
+`list_project_groups`, `read_project`, `validate_project` and `list_deployments` only read,
+`upload_project` and `delete_files` change a project in the database, and `deploy`
+publishes it. This skill
 covers getting a project onto CloudBackend PaaS; writing the XML is for the XIOS skills
 that ship alongside it.
 
@@ -63,12 +64,30 @@ are relative to the project root:
 </application>
 ```
 
+## Where a project lives
+
+A project is in one of three places:
+
+| Where                          | Shared with              | `source_db` / `destination_db` | Published with |
+|--------------------------------|--------------------------|--------------------------------|----------------|
+| `home://Applications/<name>/`  | only the user            | `home` (the default)           | `deploy`       |
+| `tenant://Applications/<name>/`| everyone in the tenant   | `tenant`                       | `deploy`       |
+| `p<id>://Development/<name>/`  | the project group's members | `project`, with `project_group` | the Deployments board |
+
+A project group is a project in CloudBackend PaaS with a drive of its own, `p<id>://`.
+Most work now happens in project groups, so when the user names a project, look in all
+three: `list_projects` with no arguments covers them, and `list_project_groups` lists the
+groups the user is in, their role there and their apps. To reach a group's app, pass
+`source_db` (or `destination_db` for an upload) `"project"` and `project_group`, the
+group's name or id. An app name in a project group may only have letters, digits, spaces
+and `_ . -`.
+
 ## Look before you change
 
 The read-only tools are always safe to call, so use them instead of assuming:
 
 - `list_projects` to find the project the user means, or to check a name is free before
-  creating one.
+  creating one. `list_project_groups` for the user's project groups and their role in each.
 - `read_project` to change a project that is not on disk. Without `paths` it lists the
   files; with `paths` it returns them in the same `{path, content, encoding}` form
   `upload_project` takes, so a file can be edited and sent back as is.
@@ -81,9 +100,10 @@ The read-only tools are always safe to call, so use them instead of assuming:
 ## Upload and deploy
 
 `upload_project` takes a `project_name` and a list of files with paths relative to the
-project root. It writes to `home://Applications/<project_name>/` by default, or
+project root. It writes to `home://Applications/<project_name>/` by default,
 `tenant://Applications/<project_name>/` with `destination_db: "tenant"` for a project
-shared with the tenant. Files that already exist are overwritten and files that are not
+shared with the tenant, or `p<id>://Development/<project_name>/` with
+`destination_db: "project"` and `project_group` for an app in a project group. Files that already exist are overwritten and files that are not
 sent are left alone, so a fix can be a single file rather than the whole project.
 
 It refuses to write into a project that already exists unless `update_existing` is true.
@@ -102,13 +122,16 @@ It validates by default: the manifest and everything reachable from it through
 `xlink:href` are checked against the schema, and other referenced files have to exist. A
 failure names the file and the reason, so fix and re-upload rather than deploying anyway.
 
-`deploy` then publishes it. Two things to know:
+`deploy` then publishes a home or tenant project. It refuses an app in a project group:
+the user moves that to Test, and from Test to Live, on the Deployments board in
+CloudBackend PaaS, which freezes and fingerprints the code. After uploading to a project
+group, tell the user that is the next step rather than offering to deploy. For `deploy`:
 
 - `deployment_name` may only contain lowercase alphanumeric characters. If the project
   name has capitals, a hyphen or a space, pass `deployment_name` explicitly, eg. project
   `HelloWorld` deploys as `helloworld`.
-- Pass `source_db` only when the same project name exists in both `home://Applications/`
-  and `tenant://Applications/`.
+- Pass `source_db` (`home` or `tenant`) only when the same project name exists in more
+  than one place.
 
 Deploying requires `index.xml` with an `<application>` root tag; a project without one is
 just files in the database.
@@ -125,6 +148,10 @@ validation needs. Deploying and deleting are not, so check with the user first:
   everyone in the tenant, and a deploy from there is public rather than private.
 - An earlier "yes, deploy it" covers that deploy, not every later change. Ask again after
   further edits unless the user said to keep deploying.
+- Ask before uploading into or deleting from a project group the user did not name in
+  this conversation: its members share its files, and what is uploaded becomes the
+  project's code. If `list_project_groups` shows the user is not an Owner or
+  Administrator there, say so before writing, as they may not be allowed to.
 - Ask before `delete_files`, unless the user asked for the deletion or the files are ones
   you created or renamed in this conversation.
 - Ask before overwriting a project you did not create (see `update_existing` above).

@@ -5,8 +5,9 @@ install, one MCP server and six skills:
 
 - `cbemcp` — `upload_project` writes a project into the database, validating it against
   the schema, `delete_files` removes files, and `deploy` publishes it. `whoami`,
-  `list_projects`, `read_project`, `validate_project` and `list_deployments` look at
-  projects and deployments without changing anything
+  `list_projects`, `list_project_groups`, `read_project`, `validate_project` and
+  `list_deployments` look at projects, project groups and deployments without changing
+  anything
 - the `xios-apps` skill — project layout, the manifest, the rules that make a deploy
   fail, and when to ask before deploying or deleting
 - the XIOS skills from [skills.xios3.com](https://skills.xios3.com/), which teach the
