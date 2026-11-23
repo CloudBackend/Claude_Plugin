@@ -18,14 +18,14 @@
 
 - `tokens="true"` on every theme with `<tokens>`, the dark one too: without it the contract check fails.
 - `<tokens>`: the element name is the token, `<radius-md>` sets `--xios-radius-md`: names from `tokens.css`, or the knobs listed in `tools/check-token-contract.mjs` (INTENTIONAL). No `;{}` in a value.
-- `<colors>`: `<color name="x">` sets `--xios-color-x`. Seeds: `primary`, `secondary`, `tertiary`, each with `on-<role>`; `background`, `surface`, `on-surface`; `error`, `on-error`, `warning`, `success`. Also `red`, `yellow` (some CSS falls back to them: same as error, warning) and `lightText`/`darkText`, `lightIcon`/`darkIcon` (picked by background darkness).
+- `<colors>`: `<color name="x">` sets `--xios-color-x`. Seeds: `primary`, `secondary`, `tertiary`, `error`, `warning`, `success`, each with `on-<role>`; `background`, `surface`, `on-surface`. Also `red`, `yellow` (CSS falls back to them: same as error, warning) and `lightText`/`darkText`, `lightIcon`/`darkIcon` (picked by background darkness).
 - A child merges with its parent: colors, tokens, fonts by name, `<components>` per tag and attribute, `icon`. List only changes.
 - Fonts: `<fonts><font-face name="Inter" href="(css)" type="css"/></fonts>` and `<font-sans>'Inter', sans-serif</font-sans>` in `<tokens>`.
 - `<components>` maps a tag to its look (`<button look="token"/>`), the one place look names are used; aurora's mapping is inherited. Theme-wide `--xc-*`: `<components><view><style>:root { --xc-input-radius: 8px; }</style></view></components>`.
 
 ## Dark variant
 
-A theme that inherits the light one: dark `background`, `surface`, `on-surface`, a lighter `primary` with a dark `on-primary`, brighter state colors (and `red`, `yellow`), `darkIcon` as `primary`, and `<tokens><appearance>dark</appearance></tokens>` (dark date pickers). Check its contrast again.
+A theme that inherits the light one: dark `background`, `surface`, `on-surface`, a lighter `primary` with a dark `on-primary`, brighter state colors with dark `on-warning` and `on-success` (and `red`, `yellow`), and `darkIcon` as `primary`. Check its contrast again.
 
 ## Register and preview
 

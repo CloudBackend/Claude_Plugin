@@ -35,7 +35,8 @@
     </xs:sequence>
     <xs:assert test="count(home) &lt;= 1" />
     <xs:assert test="count(path) &lt;= 1" />
-    <xs:assert test="count(locale) &lt;= 1" />
+    <!-- locale repeats: SYS_Application selectNodes every locale and localedir
+         under settings and searches them in order. -->
     <xs:assert test="count(open-area) &lt;= 1" />
     <xs:assert test="count(open-area[not(. = 'top' or . = 'bottom' or . = 'left' or . = 'right')]) = 0" />
   </xs:complexType>
@@ -264,11 +265,22 @@
       <xs:element name="createPrompt" type="xs:string" minOccurs="0" maxOccurs="1" />
       <xs:element name="support" type="xs:string" minOccurs="0" maxOccurs="1" />
       <xs:element name="tenant" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="project" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Group id of the app's project. A user who signs up on the login screen joins it as the project's join rules allow: as a member, with a join request, or not at all when it is closed. Empty joins none.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:token">
+            <xs:pattern value="([1-9][0-9]*)?" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
       <xs:element name="username" type="xs:string" minOccurs="0" maxOccurs="1" />
       <xs:element name="password" type="xs:string" minOccurs="0" maxOccurs="1" />
       <xs:element name="signup" type="t_loginSignup" minOccurs="0" maxOccurs="1" />
       <xs:element name="recovery" type="t_loginPage" minOccurs="0" maxOccurs="1" />
       <xs:element name="newPassword" type="t_loginPage" minOccurs="0" maxOccurs="1" />
+      <xs:element name="verify" type="t_loginVerify" minOccurs="0" maxOccurs="1" />
     </xs:choice>
     <xs:attribute name="session" type="xs:boolean" />
   </xs:complexType>
@@ -282,6 +294,32 @@
       <xs:element name="description" type="xs:string" minOccurs="0" maxOccurs="1" />
       <xs:element name="button" type="xs:string" minOccurs="0" maxOccurs="1" />
     </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="t_loginVerify">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Email verification: the texts of the page an email verification link opens (?verify= and the code), once the email is verified, and whether the app requires a verified email.</xs:documentation>
+    </xs:annotation>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="title" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="description" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="button" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="pending" type="xs:string" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">The message shown when verification is required and the email is not verified yet: on the sign in page after a refused sign in, and after creating an account.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="resent" type="xs:string" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Added after the pending message on the sign in page when a refused sign in sent a new verification link. Default "We sent you a new link."</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:choice>
+    <xs:attribute name="required" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">true (or 1): a user whose email is not verified can't sign in to the app; the session is ended and the sign in page shows the pending message. Default false.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="t_loginSignup">
@@ -307,6 +345,16 @@
             <xs:documentation xml:lang="en">Id of the step to start at when the xlinked process is invoked.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="held-actuate" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">The xlink:actuate it had before a login screen set it to onRequest, empty when it had none. The login application opens it after sign in.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="id" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">Names the process so a breakpoint survives an edit: the debugger addresses a node under it as process[@id="..."] instead of by position.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
         <xs:attributeGroup ref="t_xlinkSimple"/>
       </xs:extension>
     </xs:complexContent>
@@ -318,6 +366,11 @@
     </xs:annotation>
     <xs:complexContent>
       <xs:extension base="t_view">
+        <xs:attribute name="held-actuate" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">The xlink:actuate it had before a login screen set it to onRequest, empty when it had none. The login application opens it after sign in.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
         <xs:attributeGroup ref="t_xlinkSimple"/>
       </xs:extension>
     </xs:complexContent>

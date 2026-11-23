@@ -15,7 +15,7 @@ trap 'rm -rf "$work"' EXIT
 if [ $# -ge 1 ]; then
   zip=$1
 else
-  name=$(curl -fsSL "$site/" | grep -o 'xios-plugin-[0-9]*\.zip' | head -n 1)
+  name=$(curl -fsSL "$site/" | grep -o 'xios-plugin-[0-9.]*\.zip' | head -n 1)
   [ -n "$name" ] || { echo "no plugin zip linked from $site/" >&2; exit 1; }
   zip=$work/$name
   curl -fsSL "$site/$name" -o "$zip"

@@ -39,6 +39,7 @@ An argument is a bare reference or 'quoted' text: `concat($a, '-', $b)`. **(text
 - `escape-xml(s)` (text) escaped for XML
 - `xpath-escape(s)` (text) a quoted XPath literal: `@id = {xpath-escape({$id})}`
 - `encode-for-uri(s)` encoded for a URL
+- `wrap-braces(s)` (text) in braces, `{s}`; empty stays empty; a lone `{`: `decode-uri('%7B')`
 
 **Numbers**
 
@@ -51,7 +52,7 @@ An argument is a bare reference or 'quoted' text: `concat($a, '-', $b)`. **(text
 
 - `formatdate(date, 'yyyy-MM-dd HH:mm')` (text) formatted; with only the format: now; `'posix'`: seconds
 - `parsedate(s, 'format')` (text) a date text read; format optional
-- `changedate(date, '+1day-2hours')` (text) moved: seconds ... years
+- `changedate(date, '+1d-2h')` (text) moved; m is months
 - `comparedate(a, b)` (text) -1, 0 or 1
 - `dayspan(a, b)` (text) days between `yyyy-MM-dd` dates
 - `validatedate(s, 'format')` (text) plain `true` or `false`

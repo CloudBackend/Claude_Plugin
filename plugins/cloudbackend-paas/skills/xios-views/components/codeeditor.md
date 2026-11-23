@@ -6,7 +6,7 @@
 
 - `mode` (xml, html, css, js, json, text), `footer`, `modeselect`, `readonly`, `update-enabled`, `reformat`, `validate`, `highlight`
 - actions: focus, activate, unbind
-- events: Updated, Changed, Saved, OnInput, Select, ContextMenu, SelectionMenu, ValidXml, InvalidXml, MimeIsXml, MimeIsNonXml, XpathResult, LastUndo, EnableUndo, LastRedo, EnableRedo, Drop
+- events: Updated, Changed, Saved, OnInput, Select, ContextMenu, SelectionMenu, ValidXml, InvalidXml, MimeIsXml, MimeIsNonXml, CanReformat, CannotReformat, BreakpointsSet, BreakpointsCleared, XpathResult, LastUndo, EnableUndo, LastRedo, EnableRedo, Drop, Renamed
 - methods: updateData, setUpdateEnabled, reformat, search, searchAndReplace, searchCount, clearHighlights, takeEnter, releaseEnter, gotoLine, setCursor, highlightNode, getSelectionValue, getSelectionXPath, haveSelection, setFont, executeCommand, doCopy, doCut, toggleComment, deleteNodeAtCaret, emitCtrlZ, emitCtrlY
 
 ## Guidance
@@ -19,5 +19,5 @@
 
 - The bound document's type picks the mode. Edits are written back on leaving or after a second's pause: before a Save, call `updateData` with `wait="true"`, as above.
 - `readonly="true"` shows only; `update-enabled="false"` edits without writing back. No enable/disable; `highlight` has no effect.
-- Changed can fire several times per edit - treat it as "check the document"; ValidXml/InvalidXml follow each update.
-- `label` is its only accessible name. Tab indents; Escape then Tab leaves - say so in a help text.
+- Changed can fire several times per edit - treat it as "check the document"; ValidXml/InvalidXml follow each update and judge XML only: a CSS, JS or JSON document always gives InvalidXml.
+- `label` is its only accessible name. Tab indents; Escape then Tab leaves (that Escape does not cancel the dialog) - the footer says so; with `footer="false"`, say so in a help text.

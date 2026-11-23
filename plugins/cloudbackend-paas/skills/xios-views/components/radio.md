@@ -20,6 +20,6 @@
 
 ## Guidance
 
-- Radios are direct children of a `group mode="mutex"` with a `name` (without it the arrow keys don't move between them) and a `label` (the radiogroup's name). Trigger on the group's Select and read `{#v#group}`: the chosen radio's `value`. Bind the group, not the radios.
+- Radios are direct children of a `group mode="mutex"` with a `name` (without it the arrow keys don't move between them) and a `label` (the radiogroup's name). Trigger on the group's Select and read `{#v#group}`: the chosen radio's `value`. Bind the group, not the radios. A bound group ticks the radio whose `value` equals the document text exactly, letter case included.
 - Each radio has a `value` and `post-text`; start with `selected="true"` or the group's `value` (a radio's name).
 - Stacked radios: `type="row"` and `style="line-height: 24px"` on the group.

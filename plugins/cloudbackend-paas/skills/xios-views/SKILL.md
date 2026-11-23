@@ -41,13 +41,13 @@ Read the component files you will need in one go, at the start, together with th
 </application>
 ```
 
-- `instances="0"`: no instance limit; `<about loader="false"/>`: no splash. A resource `<item name="doc">`'s first child is the document `#doc`.
-- A view has one root `<panel>`; menus go directly in the view, before it. With several views, mark the first with `xlink:actuate="onLoad"`.
+- `instances="0"`: no instance limit; `<about loader="false"/>`: no splash. A resource `<item name="doc">`'s first child is the document `#doc`; a file is no resource: bind it by its address, `app://x.xml`.
+- A view has one root `<panel>`; menus go directly in the view. Several views: `xlink:actuate="onLoad"` on the first, `"onRequest"` on the rest.
 - Bind after `Loaded`, as above; a bound field writes the user's committed edit back.
 - Most components take the actions set, show, hide, enable and disable, fire Show, Hide, Enabled and Disabled, and have the methods getValue and setValue.
 - Data-driven components take `<rule match="xpath">` children whose markup reads the matched node with `{@attr}`.
 - Translations: `l:label="KEY"` (any attribute) with `xmlns:l="https://xios3.com/lang"`; keys in `<dir>/<locale>.xml`, listed in `<settings><locale>dir</locale></settings>`.
-- Check a file with `node <this skill's folder>/validator/cli.js app.xml` (in the xios-core repository: `npm run validate -- app.xml`): at runtime few components warn about unknown attributes.
+- Check a file with `node <this skill's folder>/validator/cli.js app.xml`: at runtime few components warn about unknown attributes.
 
 ## Rules for every component
 

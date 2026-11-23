@@ -27,7 +27,7 @@
 - `sort`: ascending | descending | true | false
 - `header`, `count`, `data`, `create`
 - Item attributes: `value`, `selected`, `title`, `colorbox`, `icon`
-- events: Change, Select
+- events: Close, Open
 - methods: getText
 
 ## Guidance

@@ -42,7 +42,7 @@ export default class CA_Stars extends Component {
 }
 ```
 
-- `Change` for a value the user changed (as input), `Select` for an activation. A second same-type event in one tick is dropped.
+- `Change` for a value the user changed (as input), `Select` for an activation. A repeat waits for the first's steps, then fires if its selection differs.
 - Keys on its own element; `preventDefault()`, `stopPropagation()`.
 
 ## Skin and CSS

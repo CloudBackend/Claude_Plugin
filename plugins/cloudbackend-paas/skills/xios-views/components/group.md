@@ -15,8 +15,8 @@
 
 ```xml
 <group name="size" label="Size" mode="mutex">
-  <radio name="small" value="s" post-text="Small"/>
-  <radio name="medium" value="m" post-text="Medium"/>
+  <radio name="small" value="S" post-text="Small"/>
+  <radio name="medium" value="M" post-text="Medium"/>
 </group>
 ```
 

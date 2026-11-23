@@ -9,7 +9,7 @@
 - `sort`: ascending | descending
 - `virtual`: auto | true | false
 - `paging`: none | all
-- `layout`, `item-height`, `lasso`, `deselect`, `sort-by`, `loading`, `paging-max`, `group`, `group-label`, `state`, `draggable`, `droppable`, `upload`, `upload-folders`, `upload-accept`, `accept`
+- `layout`, `item-height`, `lasso`, `deselect`, `focus-scroll`, `sort-by`, `loading`, `paging-max`, `group`, `group-label`, `state`, `draggable`, `droppable`, `upload`, `upload-folders`, `upload-accept`, `accept`
 - bound state, `attr="{xpath}"` into the `state` document: `filter`, `selected`, `selected-xpath`, `focused`, `renaming`, `acted`, `loaded`, `total`, `drag-key`, `drop-key`
 - Rules: `match`, `key` (XPath, e.g. @uid), `group`, `group-label`, `rename` (XPath, e.g. @name), `filter-by` (space-separated XPaths), `volatile` (space-separated attribute names), `label` (text with {xpath}, e.g. {@friendly})
 - events: Select, Clear, Open, DoubleClick, Delete, Renamed, ContextMenu, Menu, Action, Change, DragOver, Drop

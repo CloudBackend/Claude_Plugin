@@ -15,9 +15,10 @@ Read the files you will need in one go, at the start: for a new app the three la
 
 In the forms an attribute's value is its language: **ref** names data (`#doc`, `$alias`, `!`, `#view#comp`); **{}** is text whose `{...}` are filled; **xpath** is XPath 1.0 once its `{...}` are filled; **id** a literal name; **n** a number; else the allowed values.
 
-- A trigger queues its step: a process runs one step at a time, a step its children in order, each waiting for the one before. The step `start` (or `<process step>`) runs first; a step id may name a step of any process of the application.
+- A trigger queues its step: a process runs one step at a time, a step its children in order, each awaited. `<process step>`, else the step `start`, runs first; a step id may name a step of any process (`error`, `success`, `goto`: its own only).
 - A failed operation is logged and the step goes on, unless the step has `error="id"`; `error=""` ignores failures.
 - Logic stays in the process: state in `model="value"` aliases, branches in `<if>`/decision, sums in `{…}`: `<if value="#v1" test="'{$op}' = 'add'"><alias name="cur" value="{$acc + $cur}" model="value"/></if>`.
+- Keep expressions small: a field checks its own format (`type="date"`, `pattern`, `required`), a `test` only what no field can; test the node, `<if value="$row" test="@done = 'true'">`, not its text in `{…}`; a value two steps need is one alias. A `test` over ~120 characters is doing another part's job.
 - JS only for what that can't do: `<script href="steps.js"/>` makes its exports steps, `step="name"` runs `name(evt, context)`.
 - Own operations: xios-extend.
 
@@ -37,4 +38,4 @@ Use only these operations, as their group file writes them.
 - [`decision`, `call`, `async`, `confirm`, `debug`](operations/flow.md) - branch (`<if>`), run steps, timers, dialogs, log
 - [`save`, `database`, `download`](operations/files.md) - save, files and folders on a drive, download
 - [`open`, `close`, `config`, `system`, `callService`](operations/apps.md) - views and applications, language, settings, clipboard, HTTP
-- [`channel`, `login`, `groups`, `friends`, `tenant`, `mail`, `share`, `stats`](operations/cloudbackend.md) - CloudBackend services (need a signed-in channel)
+- [`channel`, `login`, `groups`, `friends`, `tenant`, `pow`, `share`](operations/cloudbackend.md) - CloudBackend services

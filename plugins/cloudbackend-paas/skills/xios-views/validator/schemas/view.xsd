@@ -84,6 +84,24 @@
       </xs:annotation>
     </xs:attribute>
 
+    <!-- focus is handled in GUI_View: the first visible, enabled component
+         with focus="true" takes the focus when the view opens. A string, not a
+         boolean: on a view it names the component to focus, and listview reads
+         its own focus types (false, true, x, y) off the same attribute. -->
+    <xs:attribute name="focus" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">Whether this component takes the keyboard focus when the view opens.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <!-- Read by the enclosing panel's rows/columns layout off each child
+         (ui/Panel/rows.xsl, ui/Panel/columns.xsl), not by the component. -->
+    <xs:attribute name="align" type="t_align">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">How the enclosing panel aligns this component across the row or column.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
     <xs:attribute name="height" type="xs:string">
       <xs:annotation>
         <xs:documentation xml:lang="en">The height of the component.</xs:documentation>
@@ -106,6 +124,19 @@
     <xs:attribute name="label-style" type="xs:string">
       <xs:annotation>
         <xs:documentation xml:lang="en">Override the text label with additional CSS styling.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <!-- pinchzoom and maxzoom are handled in Component.enablePinchZoom -->
+    <xs:attribute name="pinchzoom" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">On touch screens, two fingers zoom this component's content instead of the page. On by default for photo; "false" turns it off, "true" turns it on for another component.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute name="maxzoom" type="xs:decimal">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">The largest pinch zoom, as a factor of the unzoomed size. Default 4.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
 
@@ -193,9 +224,13 @@
     <xs:anyAttribute namespace="##any" processContents="skip" />
   </xs:complexType>
 
+  <!-- Two shapes share <row>: a list or table rule row, which carries match=
+       and holds <column>s, and the legacy form/table panel row, which holds
+       components and carries no match (see ui/Panel/doc.xml). -->
   <xs:complexType name="t_row">
-    <xs:sequence>
-      <xs:element name="column" minOccurs="0" maxOccurs="unbounded">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="g_anyComponent" />
+      <xs:element name="column">
         <xs:complexType>
           <xs:attribute name="match" type="xs:string" use="required" />
           <xs:attribute name="align" type="t_align" />
@@ -214,8 +249,8 @@
           <xs:anyAttribute namespace="##any" processContents="skip" />
         </xs:complexType>
       </xs:element>
-    </xs:sequence>
-    <xs:attribute name="match" type="xs:string" use="required" />
+    </xs:choice>
+    <xs:attribute name="match" type="xs:string" />
     <xs:attribute name="height" type="xs:string" />
   </xs:complexType>
 
@@ -303,22 +338,13 @@
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="audiocontroller" type="t_audiocontroller" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
+      <xs:element name="app" type="t_app" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="boxlist" type="t_boxlist" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="breadcrumbs" type="t_breadcrumbs" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="browser" type="t_browser" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
@@ -344,17 +370,7 @@
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="canvas" type="t_canvas" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="carousel" type="t_carousel" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="chart" type="t_chart" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
@@ -411,11 +427,6 @@
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="editor" type="t_editor" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="expander" type="t_expander" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
@@ -453,30 +464,15 @@
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="icongrid" type="t_icongrid" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="iconlist" type="t_iconlist" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="image" type="t_image" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="Info" type="t_Info" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="input" type="t_input" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="item" type="t_item" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="label" type="t_label" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="launchpad" type="t_launchpad" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="legacytree" type="t_legacytree" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
@@ -493,18 +489,8 @@
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="media" type="t_media" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="menu" type="t_menu" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="menubar" type="t_menubar" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="movie" type="t_movie" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
@@ -521,23 +507,8 @@
         </xs:annotation>
       </xs:element>
       <xs:element name="plate" type="t_plate" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="player" type="t_player" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="progressbar" type="t_progressbar" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="qr" type="t_qr" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="radio" type="t_radio" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="rating" type="t_rating" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="render" type="t_render" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
@@ -550,11 +521,6 @@
       </xs:element>
       <xs:element name="row" type="t_row" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="rule" type="t_rule" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="shape" type="t_shape" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="shell" type="t_shell" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
@@ -565,19 +531,9 @@
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="spinner" type="t_spinner" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="table" type="t_table" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="tabstrip" type="t_tabstrip" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="textarea" type="t_textarea" minOccurs="0" maxOccurs="unbounded" />
-      <xs:element name="texteditor" type="t_texteditor" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
       <xs:element name="tinymce" type="t_tinymce" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
@@ -602,21 +558,6 @@
         </xs:annotation>
       </xs:element>
       <xs:element name="widgetpane" type="t_widgetpane" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="XMLeditor" type="t_XMLeditor" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="xycontrol" type="t_xycontrol" minOccurs="0" maxOccurs="unbounded">
-        <xs:annotation>
-          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="xymenu" type="t_xymenu" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
         </xs:annotation>
@@ -647,9 +588,15 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_audiocontroller">
+  <xs:complexType name="t_app">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Runs a whole application inside a view of another application. The app component is the host's frame for it: the embedded application gets an instance, processes and a view of its own, and that view fills the component. This is how an application is put together from applications - each section of a dashboard can be an application that also runs on its own.</xs:documentation>
+    </xs:annotation>
     <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
+    <xs:attribute name="href" type="xs:string" />
+    <xs:attribute name="title" type="xs:string" />
+    <xs:attribute name="class" type="xs:string" />
+    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
   <xs:complexType name="t_boxlist">
@@ -679,16 +626,6 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_browser">
-    <xs:annotation>
-      <xs:documentation xml:lang="en">The component creates a Web Browser for browsing information through the hyper text transfer protocol</xs:documentation>
-    </xs:annotation>
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:attribute name="href" type="xs:string" />
-    <xs:attribute name="value" type="xs:string" />
-    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
   <xs:complexType name="t_bush">
     <xs:annotation>
       <xs:documentation xml:lang="en">Defines a bush, which is a tree type of component that uses lazy loading to build the tree and expands the tree when the user click on branches.</xs:documentation>
@@ -707,6 +644,7 @@
     <xs:attribute name="sort" type="xs:string" />
     <xs:attribute name="sortproperty" type="xs:string" />
     <xs:attribute name="wait" type="xs:string" />
+    <xs:attribute name="scroll" type="xs:boolean" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
@@ -827,18 +765,6 @@
         <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="align">
-      <xs:annotation>
-        <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
-      </xs:annotation>
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="left" />
-          <xs:enumeration value="right" />
-          <xs:enumeration value="center" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
     <xs:attribute name="type">
       <xs:annotation>
         <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
@@ -905,16 +831,6 @@
     <xs:attribute name="title" type="xs:string" />
     <xs:attribute name="value" type="xs:string" />
     <xs:attribute name="iconsize" type="xs:string" />
-    <xs:attribute name="align">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="" />
-          <xs:enumeration value="left" />
-          <xs:enumeration value="center" />
-          <xs:enumeration value="right" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
     <xs:attribute name="animate" type="xs:boolean" />
     <xs:attribute name="onclick" type="xs:string" />
     <xs:attribute name="opacity" type="xs:string" />
@@ -952,25 +868,19 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_canvas">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
-  </xs:complexType>
-
   <xs:complexType name="t_carousel">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">A container that shows one of its children at a time and moves between them.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="g_anyComponent" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_chart">
-    <xs:annotation>
-      <xs:documentation xml:lang="en">The component creates a Chart for presenting information</xs:documentation>
-    </xs:annotation>
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:attribute name="charttype" type="xs:string" />
+    <xs:attribute name="class" type="xs:string" />
+    <xs:attribute name="value" type="xs:string" />
+    <xs:attribute name="selected" type="xs:string" />
+    <xs:attribute name="duration" type="xs:string" />
+    <xs:attribute name="look" type="xs:string" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
@@ -1103,11 +1013,6 @@
         <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="snippetMode" type="xs:string">
-      <xs:annotation>
-        <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
@@ -1160,8 +1065,14 @@
   </xs:complexType>
 
   <xs:complexType name="t_colorgradient">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">A two-dimensional colour field: a hue picked across it, its shade down it.</xs:documentation>
+    </xs:annotation>
     <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
+    <xs:attribute name="class" type="xs:string" />
+    <xs:attribute name="x" type="xs:string" />
+    <xs:attribute name="y" type="xs:string" />
+    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
   <xs:complexType name="t_colorpicker">
@@ -1211,8 +1122,17 @@
   </xs:complexType>
 
   <xs:complexType name="t_colorswatches">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">A grid of fixed colours to pick from.</xs:documentation>
+    </xs:annotation>
     <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
+    <xs:attribute name="class" type="xs:string" />
+    <xs:attribute name="size" type="xs:string" />
+    <xs:attribute name="gap" type="xs:string" />
+    <xs:attribute name="border" type="xs:string" />
+    <xs:attribute name="x" type="xs:string" />
+    <xs:attribute name="y" type="xs:string" />
+    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
   <xs:complexType name="t_combobox">
@@ -1417,11 +1337,6 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_editor">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
-  </xs:complexType>
-
   <xs:complexType name="t_expanderitem">
     <xs:annotation>
       <xs:documentation xml:lang="en">The component creates an Expander Menu, a menu inside an Expander</xs:documentation>
@@ -1430,6 +1345,7 @@
       <xs:group ref="g_anyComponent" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="t_inlineComponent" />
+    <xs:attribute name="submenu" type="xs:string" />
     <xs:attribute name="enabled" type="xs:boolean" />
     <xs:attribute name="icon" type="xs:string" />
     <xs:attribute name="text" type="xs:string" />
@@ -1447,20 +1363,70 @@
     <xs:attributeGroup ref="t_inlineComponent" />
     <xs:attribute name="class" type="xs:string" />
     <xs:attribute name="container" type="xs:string" />
-    <xs:attribute name="database">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="database" />
-          <xs:enumeration value="drive" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
+    <xs:attribute name="database" type="xs:string" />
     <xs:attribute name="driveicon" type="xs:string" />
     <xs:attribute name="folders" type="xs:boolean" />
     <xs:attribute name="showloader" type="xs:boolean" />
+    <xs:attribute name="rename" type="xs:boolean" />
     <xs:attribute name="upload" type="xs:boolean" />
     <xs:attribute name="silent" type="xs:boolean" />
     <xs:attribute name="onlyfolders" type="xs:boolean" />
+    <xs:attribute name="deselect" type="xs:boolean" />
+    <xs:attribute name="hover" type="xs:boolean" />
+    <xs:attribute name="iconsize" type="xs:string" />
+    <xs:attribute name="lasso" type="xs:boolean" />
+    <xs:attribute name="layout">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="albumicon" />
+          <xs:enumeration value="badge" />
+          <xs:enumeration value="card" />
+          <xs:enumeration value="columns" />
+          <xs:enumeration value="default" />
+          <xs:enumeration value="databases" />
+          <xs:enumeration value="databasesDetailed" />
+          <xs:enumeration value="databasesMenu" />
+          <xs:enumeration value="icon" />
+          <xs:enumeration value="list" />
+          <xs:enumeration value="listdetail" />
+          <xs:enumeration value="mail" />
+          <xs:enumeration value="miniature" />
+          <xs:enumeration value="playlist" />
+          <xs:enumeration value="submenu" />
+          <xs:enumeration value="subpanel" />
+          <xs:enumeration value="sectionlist" />
+          <xs:enumeration value="text" />
+          <xs:enumeration value="textListColumn" />
+          <xs:enumeration value="thumbnail" />
+          <xs:enumeration value="tracklist" />
+          <xs:enumeration value="treelist" />
+          <xs:enumeration value="vertical" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="multipleselect" type="xs:boolean" />
+    <xs:attribute name="paging">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="more" />
+          <xs:enumeration value="scroll" />
+          <xs:enumeration value="lazy" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="partialupdate" type="xs:boolean" />
+    <xs:attribute name="sort">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="ascending" />
+          <xs:enumeration value="descending" />
+          <xs:enumeration value="position" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="sortproperty" type="xs:string" />
+    <xs:attribute name="foldericon" type="xs:string" />
+    <xs:attribute name="special-icons" type="xs:boolean" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
@@ -1567,16 +1533,6 @@
       </xs:simpleType>
     </xs:attribute>
     <xs:attribute name="page-message" type="xs:string" />
-    <xs:attribute name="align">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="" />
-          <xs:enumeration value="left" />
-          <xs:enumeration value="center" />
-          <xs:enumeration value="right" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
     <xs:attribute name="display" type="xs:string" />
     <xs:attribute name="filter" type="xs:boolean" />
     <xs:attribute name="icon" type="xs:string" />
@@ -1603,16 +1559,6 @@
       <xs:group ref="g_anyComponent" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:attribute name="align">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="right" />
-          <xs:enumeration value="left" />
-          <xs:enumeration value="center" />
-          <xs:enumeration value="" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
     <xs:attribute name="type" type="xs:string" />
     <xs:attribute name="class" type="xs:string" />
     <xs:attribute name="value" type="xs:string" />
@@ -1672,12 +1618,12 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_html">
+  <xs:complexType name="t_html" mixed="true">
     <xs:annotation>
       <xs:documentation xml:lang="en">Includes HTML in a view, either as child elements of the tag or from an xlinked document. Every element carrying an id attribute becomes an addressable component of the view, so it can be bound to data and listened to like any other component. Those generated components are reached by their id, not through the html tag, and they are the ones that emit Select, Change, Key, Enter, Escape and Blur.</xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:group ref="g_anyComponent" minOccurs="0" maxOccurs="unbounded" />
+      <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="t_inlineComponent" />
     <xs:attribute name="alwaysontop" type="xs:boolean" />
@@ -1685,18 +1631,21 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_icongrid">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
-  </xs:complexType>
-
   <xs:complexType name="t_iconlist">
     <xs:annotation>
       <xs:documentation xml:lang="en">The iconlist component is used to visualize lists of things with an icon and a text label describing the icon.</xs:documentation>
     </xs:annotation>
-    <xs:sequence>
-      <xs:group ref="g_anyComponent" minOccurs="0" maxOccurs="unbounded" />
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="g_anyComponent" />
+      <xs:element name="columns">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:anyAttribute namespace="##any" processContents="skip" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
     <xs:attributeGroup ref="t_inlineComponent" />
     <xs:attribute name="animate" type="xs:string" />
     <xs:attribute name="arrangeitems" type="xs:boolean" />
@@ -1768,16 +1717,7 @@
         </xs:restriction>
       </xs:simpleType>
     </xs:attribute>
-    <xs:attribute name="scroll">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="auto" />
-          <xs:enumeration value="scroll" />
-          <xs:enumeration value="hidden" />
-          <xs:enumeration value="false" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
+    <xs:attribute name="scroll" type="xs:boolean" />
     <xs:attribute name="scrollArrow" type="xs:boolean" />
     <xs:attribute name="selecttype">
       <xs:simpleType>
@@ -1801,6 +1741,7 @@
     <xs:attribute name="textstyle" type="xs:string" />
     <xs:attribute name="title" type="xs:string" />
     <xs:attribute name="unselectevents" type="xs:boolean" />
+    <xs:attribute name="draggableitems" type="xs:boolean" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
@@ -1829,19 +1770,6 @@
     <xs:attribute name="hoversrc" type="xs:string" />
     <xs:attribute name="prefix" type="xs:string" />
     <xs:attribute name="class" type="xs:string" />
-    <xs:attribute name="align">
-      <xs:annotation>
-        <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
-      </xs:annotation>
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="left" />
-          <xs:enumeration value="center" />
-          <xs:enumeration value="right" />
-          <xs:enumeration value="" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
     <xs:attribute name="valign">
       <xs:annotation>
         <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
@@ -1873,16 +1801,6 @@
       </xs:simpleType>
     </xs:attribute>
     <xs:attribute name="method" type="xs:string" />
-    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_Info">
-    <xs:annotation>
-      <xs:documentation xml:lang="en">The component creates an Info component controlled by rules for displaying information in an Expander</xs:documentation>
-    </xs:annotation>
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:attribute name="text" type="xs:string" />
-    <xs:attribute name="default" type="xs:string" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
@@ -1931,7 +1849,6 @@
     <xs:attribute name="enabled" type="xs:boolean" />
     <xs:attribute name="editable" type="xs:boolean" />
     <xs:attribute name="autocomplete" type="xs:string" />
-    <xs:attribute name="focus" type="xs:boolean" />
     <xs:attribute name="icon" type="xs:string" />
     <xs:attribute name="toggleable" type="xs:boolean" />
     <xs:attribute name="clearsearch" type="xs:boolean" />
@@ -2026,11 +1943,6 @@
         <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="align" type="xs:string">
-      <xs:annotation>
-        <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
     <xs:attribute name="text" type="xs:string">
       <xs:annotation>
         <xs:documentation xml:lang="en">Legacy: kept for existing apps; don't use in new ones.</xs:documentation>
@@ -2041,7 +1953,7 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_item">
+  <xs:complexType name="t_item" mixed="true">
     <xs:annotation>
       <xs:documentation xml:lang="en">The item is not a stand-alone component, rather it defines item child elements for the list, menu, and plate components. Inside a menu it is implemented by CA_MenuItem.&amp;#10;&amp;#10;Note on Select and Release: a plain item publishes Select when chosen. A checkable item publishes Select when it becomes ticked and Release when it is unticked, so a listener that only handles Select sees half the transitions. An item in a group publishes Select for the newly chosen item only; the previously selected sibling is updated without publishing.</xs:documentation>
     </xs:annotation>
@@ -2212,11 +2124,6 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_launchpad">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
-  </xs:complexType>
-
   <xs:complexType name="t_legacytree">
     <xs:annotation>
       <xs:documentation xml:lang="en">Defines a tree view. This is the old tree; the modern tree is &lt;tree&gt;.</xs:documentation>
@@ -2264,6 +2171,7 @@
     </xs:attribute>
     <xs:attribute name="lasso" type="xs:boolean" />
     <xs:attribute name="deselect" type="xs:boolean" />
+    <xs:attribute name="focus-scroll" type="xs:boolean" />
     <xs:attribute name="open-on">
       <xs:simpleType>
         <xs:restriction base="xs:string">
@@ -2351,7 +2259,7 @@
 
   <xs:complexType name="t_listview">
     <xs:annotation>
-      <xs:documentation xml:lang="en">Defines a very flexible component that is driven by an XSLT document as well as data, which means in order for the component to work you need to have a external XSLT document and you need to have an XML data document bound to the component for it to display anything.</xs:documentation>
+      <xs:documentation xml:lang="en">Defines a very flexible component that is driven by an XSLT document as well as data, which means in order for the component to work you need to have a external XSLT document and you need to have an XML data document bound to the component for it to display anything. A select in the rendered HTML fires the Change event when the user picks an option that names the node it was drawn from in an xpath attribute, as items do. The event's selection is that node, in the document of the nearest dataDoc attribute on the option, the select or the item, or else the listview's own; an option without an xpath fires nothing. Changing the bound data re-renders the list, so the stylesheet should render the chosen option as selected from the data.</xs:documentation>
     </xs:annotation>
     <xs:attributeGroup ref="t_inlineComponent" />
     <xs:attribute name="href" type="xs:string" use="required" />
@@ -2359,7 +2267,6 @@
     <xs:attribute name="clickeditable" type="xs:boolean" />
     <xs:attribute name="deselect" type="xs:boolean" />
     <xs:attribute name="dimension" type="xs:boolean" />
-    <xs:attribute name="focus" type="xs:string" />
     <xs:attribute name="lasso" type="xs:boolean" />
     <xs:attribute name="mode" type="xs:string" />
     <xs:attribute name="moving" type="xs:string" />
@@ -2380,10 +2287,9 @@
         <xs:restriction base="xs:string">
           <xs:enumeration value="auto" />
           <xs:enumeration value="scroll" />
-          <xs:enumeration value="hidden" />
+          <xs:enumeration value="visible" />
           <xs:enumeration value="false" />
           <xs:enumeration value="true" />
-          <xs:enumeration value="visible" />
         </xs:restriction>
       </xs:simpleType>
     </xs:attribute>
@@ -2400,9 +2306,41 @@
     <xs:annotation>
       <xs:documentation xml:lang="en">Defines a map component utilizing Google Maps.</xs:documentation>
     </xs:annotation>
-    <xs:sequence>
-      <xs:group ref="g_anyComponent" minOccurs="0" maxOccurs="unbounded" />
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="g_anyComponent" />
+      <xs:element name="marker">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:anyAttribute namespace="##any" processContents="skip" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="circle">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:anyAttribute namespace="##any" processContents="skip" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="path">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:anyAttribute namespace="##any" processContents="skip" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="area">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:anyAttribute namespace="##any" processContents="skip" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
     <xs:attributeGroup ref="t_inlineComponent" />
     <xs:attribute name="class" type="xs:string" />
     <xs:attribute name="controls" type="xs:boolean" />
@@ -2438,15 +2376,6 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_media">
-    <xs:annotation>
-      <xs:documentation xml:lang="en">The component handles playing of media content</xs:documentation>
-    </xs:annotation>
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:attribute name="progress" type="xs:boolean" />
-    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
   <xs:complexType name="t_menu">
     <xs:annotation>
       <xs:documentation xml:lang="en">A popup menu: a plate of items, with dividers between them and data items for items made from data. A menu takes no room in the view. It stays hidden until something opens it, and it closes again when an item is chosen or the user clicks outside it.</xs:documentation>
@@ -2476,6 +2405,7 @@
       </xs:annotation>
       <xs:simpleType>
         <xs:restriction base="xs:string">
+          <xs:enumeration value="token" />
           <xs:enumeration value="marble" />
           <xs:enumeration value="fabric" />
           <xs:enumeration value="graphite" />
@@ -2526,17 +2456,15 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_movie">
+  <xs:complexType name="t_music">
     <xs:annotation>
-      <xs:documentation xml:lang="en">The component handles playing of movie content</xs:documentation>
+      <xs:documentation xml:lang="en">Plays an audio document.</xs:documentation>
     </xs:annotation>
     <xs:attributeGroup ref="t_inlineComponent" />
+    <xs:attribute name="class" type="xs:string" />
+    <xs:attribute name="default" type="xs:string" />
+    <xs:attribute name="color" type="xs:string" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_music">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
   </xs:complexType>
 
   <xs:complexType name="t_panel">
@@ -2577,16 +2505,6 @@
     <xs:attribute name="resize" type="xs:boolean" />
     <xs:attribute name="padding" type="xs:string" />
     <xs:attribute name="gap" type="xs:string" />
-    <xs:attribute name="align">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="left" />
-          <xs:enumeration value="right" />
-          <xs:enumeration value="center" />
-          <xs:enumeration value="" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
     <xs:attribute name="valign">
       <xs:simpleType>
         <xs:restriction base="xs:string">
@@ -2828,11 +2746,27 @@
   </xs:complexType>
 
   <xs:complexType name="t_photo">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Shows a picture from a drive or a URL, sized and placed inside its box.</xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:group ref="g_anyComponent" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
     <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
+    <xs:attribute name="class" type="xs:string" />
+    <xs:attribute name="title" type="xs:string" />
+    <xs:attribute name="src" type="xs:string" />
+    <xs:attribute name="mode" type="xs:string" />
+    <xs:attribute name="scale" type="xs:string" />
+    <xs:attribute name="type" type="xs:string" />
+    <xs:attribute name="valign" type="xs:string" />
+    <xs:attribute name="ratio" type="xs:string" />
+    <xs:attribute name="keepaspect" type="xs:boolean" />
+    <xs:attribute name="errorsrc" type="xs:string" />
+    <xs:attribute name="hoversrc" type="xs:string" />
+    <xs:attribute name="method" type="xs:string" />
+    <xs:attribute name="id" type="xs:string" />
+    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
   <xs:complexType name="t_plate">
@@ -2891,28 +2825,20 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_player">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_progressbar">
-    <xs:annotation>
-      <xs:documentation xml:lang="en">The component creates a Progress bar for graphically show the status of something in progress</xs:documentation>
-    </xs:annotation>
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:attribute name="length" type="xs:string" />
-    <xs:attribute name="maxValue" type="xs:string" />
-    <xs:attribute name="mode" type="xs:string" />
-    <xs:attribute name="units" type="xs:string" />
-    <xs:attribute name="aboveLabel" type="xs:string" />
-    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_qr">
+  <xs:complexType name="t_qr" mixed="true">
     <xs:annotation>
       <xs:documentation xml:lang="en">Shows a QR code that a phone camera can scan: of a text, such as a link, or of a Wi-Fi network, so a phone can join it without typing the password.</xs:documentation>
     </xs:annotation>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="wifi">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+          <xs:anyAttribute namespace="##any" processContents="skip" />
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
     <xs:attributeGroup ref="t_inlineComponent" />
     <xs:attribute name="value" type="xs:string" />
     <xs:attribute name="alt" type="xs:string" />
@@ -2997,17 +2923,6 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_rating">
-    <xs:annotation>
-      <xs:documentation xml:lang="en">Component for rating with stars or progress symbols</xs:documentation>
-    </xs:annotation>
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:attribute name="type" type="xs:string" />
-    <xs:attribute name="unit" type="xs:string" />
-    <xs:attribute name="value" type="xs:int" />
-    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
   <xs:complexType name="t_render">
     <xs:annotation>
       <xs:documentation xml:lang="en">The Render component is used to display a single XML document using an XSLT document and requires that you bind data to the component.</xs:documentation>
@@ -3048,7 +2963,6 @@
     <xs:attributeGroup ref="t_inlineComponent" />
     <xs:attribute name="autospellcheck" type="xs:boolean" />
     <xs:attribute name="class" type="xs:string" />
-    <xs:attribute name="focus" type="xs:boolean" />
     <xs:attribute name="editable" type="xs:boolean" />
     <xs:attribute name="iframe" type="xs:boolean" />
     <xs:attribute name="look">
@@ -3073,40 +2987,6 @@
     <xs:attribute name="default" type="xs:string" />
     <xs:attribute name="padding" type="xs:int" />
     <xs:attribute name="transformer" type="xs:string" />
-    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_shape">
-    <xs:annotation>
-      <xs:documentation xml:lang="en">The component creates a shape.</xs:documentation>
-    </xs:annotation>
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:attribute name="type" type="xs:string" />
-    <xs:attribute name="fillopac" type="xs:string" />
-    <xs:attribute name="strokeopac" type="xs:string" />
-    <xs:attribute name="innerleft" type="xs:string" />
-    <xs:attribute name="innertop" type="xs:string" />
-    <xs:attribute name="x1" type="xs:string" />
-    <xs:attribute name="y1" type="xs:string" />
-    <xs:attribute name="r" type="xs:string" />
-    <xs:attribute name="x" type="xs:string" />
-    <xs:attribute name="y" type="xs:string" />
-    <xs:attribute name="startangle" type="xs:string" />
-    <xs:attribute name="endangle" type="xs:string" />
-    <xs:attribute name="cp1x" type="xs:string" />
-    <xs:attribute name="cp1y" type="xs:string" />
-    <xs:attribute name="cp2x" type="xs:string" />
-    <xs:attribute name="cp2y" type="xs:string" />
-    <xs:attribute name="points" type="xs:string" />
-    <xs:attribute name="autoclose" type="xs:boolean" />
-    <xs:attribute name="fill" type="xs:string" />
-    <xs:attribute name="stroke" type="xs:string" />
-    <xs:attribute name="lineWidth" type="xs:string" />
-    <xs:attribute name="lineCap" type="xs:string" />
-    <xs:attribute name="lineJoin" type="xs:string" />
-    <xs:attribute name="miterLimit" type="xs:string" />
-    <xs:attribute name="alpha" type="xs:string" />
-    <xs:attribute name="rotate" type="xs:string" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
@@ -3170,11 +3050,6 @@
     </xs:attribute>
     <xs:attribute name="units" type="xs:string" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_spinner">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
   </xs:complexType>
 
   <xs:complexType name="t_table">
@@ -3371,7 +3246,6 @@
     <xs:attributeGroup ref="t_inlineComponent" />
     <xs:attribute name="class" type="xs:string" />
     <xs:attribute name="enabled" type="xs:boolean" />
-    <xs:attribute name="focus" type="xs:boolean" />
     <xs:attribute name="wrap">
       <xs:simpleType>
         <xs:restriction base="xs:string">
@@ -3453,14 +3327,18 @@
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
-  <xs:complexType name="t_texteditor">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
-  </xs:complexType>
-
   <xs:complexType name="t_tinymce">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">A rich-text editor.</xs:documentation>
+    </xs:annotation>
     <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
+    <xs:attribute name="class" type="xs:string" />
+    <xs:attribute name="enabled" type="xs:boolean" />
+    <xs:attribute name="face" type="xs:string" />
+    <xs:attribute name="size" type="xs:string" />
+    <xs:attribute name="src" type="xs:string" />
+    <xs:attribute name="xml" type="xs:boolean" />
+    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
   <xs:complexType name="t_toggle">
@@ -3586,7 +3464,6 @@
         </xs:restriction>
       </xs:simpleType>
     </xs:attribute>
-    <xs:attribute name="align" type="xs:string" />
     <xs:attribute name="class" type="xs:string" />
     <xs:attribute name="icon" type="xs:boolean" />
     <xs:attribute name="look">
@@ -3833,6 +3710,8 @@
     <xs:attribute name="src" type="xs:string" />
     <xs:attribute name="class" type="xs:string" />
     <xs:attribute name="title" type="xs:string" />
+    <xs:attribute name="controls" type="xs:boolean" />
+    <xs:attribute name="playsinline" type="xs:boolean" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
 
@@ -3840,24 +3719,22 @@
     <xs:annotation>
       <xs:documentation xml:lang="en">The view element is the root element for all view documents (UI markup files) that represents the V in the MVC (Model View Controller) design pattern.</xs:documentation>
     </xs:annotation>
-    <xs:sequence>
-      <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="menu" type="t_menu" minOccurs="0" />
-        <xs:element name="menubar" type="t_menubar" minOccurs="0">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-          </xs:annotation>
-        </xs:element>
-        <xs:element name="toolbar" type="t_toolbar" minOccurs="0">
-          <xs:annotation>
-            <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
-          </xs:annotation>
-        </xs:element>
-        <xs:element name="style" type="t_style" minOccurs="0" />
-        <xs:element name="script" type="t_script" minOccurs="0" />
-      </xs:choice>
-      <xs:element name="panel" type="t_panel" minOccurs="0" />
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="menu" type="t_menu" />
+      <xs:element name="menubar" type="t_menubar">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="toolbar" type="t_toolbar">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">As-is: kept for existing apps; not supported or fixed; don't use in new ones.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="style" type="t_style" />
+      <xs:element name="script" type="t_script" />
+      <xs:element name="panel" type="t_panel" />
+    </xs:choice>
     <xs:attributeGroup ref="t_inlineComponent" />
     <xs:attribute name="alwaysontop" type="xs:boolean" />
     <xs:attribute name="author" type="xs:string" />
@@ -3879,17 +3756,8 @@
     <xs:attribute name="left" type="xs:int" />
     <xs:attribute name="localedirs" type="xs:string" />
     <xs:attribute name="logotype" type="xs:string" />
-    <xs:attribute name="look">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="blue" />
-          <xs:enumeration value="graphite" />
-          <xs:enumeration value="liquid" />
-          <xs:enumeration value="alert" />
-          <xs:enumeration value="" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
+    <xs:attribute name="look" type="xs:string" />
+    <xs:attribute name="bgBlur" type="xs:boolean" />
     <xs:attribute name="max-height" type="xs:string" />
     <xs:attribute name="max-width" type="xs:string" />
     <xs:attribute name="menu" type="xs:boolean" />
@@ -3915,7 +3783,6 @@
     <xs:attribute name="version" type="xs:string" />
     <xs:attribute name="winstate" type="xs:boolean" />
     <xs:attribute name="company" type="xs:string" />
-    <xs:attribute name="focus" type="xs:string" />
     <xs:attribute name="opacity" type="xs:integer" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
   </xs:complexType>
@@ -3979,47 +3846,6 @@
     <xs:attribute name="iconback" type="xs:string" />
     <xs:attribute name="iconforward" type="xs:string" />
     <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_XMLeditor">
-    <xs:annotation>
-      <xs:documentation xml:lang="en">An XML editor component</xs:documentation>
-    </xs:annotation>
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:attribute name="mode">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="none" />
-          <xs:enumeration value="xml" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-    <xs:attribute name="linenr" type="xs:boolean" />
-    <xs:attribute name="debug" type="xs:boolean" />
-    <xs:attribute name="updateEnabled" type="xs:boolean" />
-    <xs:attribute name="editable" type="xs:boolean" />
-    <xs:attribute name="lstyle" type="xs:string" />
-    <xs:attribute name="selectionmode">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="default" />
-          <xs:enumeration value="element" />
-          <xs:enumeration value="cursor" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-    <xs:attribute name="title" type="xs:string" />
-    <xs:anyAttribute namespace="https://xios3.com/lang http://www.w3.org/1999/xlink" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_xycontrol">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
-  </xs:complexType>
-
-  <xs:complexType name="t_xymenu">
-    <xs:attributeGroup ref="t_inlineComponent" />
-    <xs:anyAttribute namespace="##any" processContents="skip" />
   </xs:complexType>
 
   <xs:element name="view" type="t_view" />

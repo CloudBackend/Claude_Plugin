@@ -28,8 +28,9 @@
 ## Guidance
 
 - The view's root is one panel; nest `type="rows"`/`"columns"` panels for layout. In them a child's `width`/`height` is its track: `fill` shares the rest.
+- `padding`/`gap` also take theme steps, `space-1` to `space-6`.
 - `label=` on a named child of a rows, columns or flow panel is drawn by the panel and names the field for screen readers.
-- `title` makes a titled group box; with `mode="expander"` a collapsible section: a click on the title bar toggles it and sets `expanded` (StateChanged). IconSelect fires only for a click on the expander's `icon` image, and then it does not toggle.
+- `title` makes a titled group box; with `mode="expander"` a collapsible section: a click on the title bar toggles it and sets `expanded` (StateChanged). A click on its `icon` fires IconSelect and does not toggle.
 - Color a panel with a `class` styled in the view's `<style>` with `--xios-color-*` tokens, not inline `style`.
-- `xlink:href` loads a view fragment into the panel and needs `xlink:actuate`: `onLoad` at once, `onRequest` when first shown; without it nothing loads. A panel has no enable/disable.
+- `xlink:href` loads a view fragment into the panel and needs `xlink:actuate`: `onLoad` at once, `onRequest` when first shown. A panel has no enable/disable.
 - `selected` and `icon` are read by a parent tabstrip.

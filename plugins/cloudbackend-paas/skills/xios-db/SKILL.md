@@ -47,7 +47,8 @@ Without a datatype the server finds a document only by its name and dates. Make 
 - Saves are last-writer-wins: no versions, no locks. Shared data is add-only: one new document per sale, move or event; totals are added up.
 - `<create type="object" name="R-20261103-0042.xml" rename="false">` fails if the name is taken, and only one client wins: use it for gap-free numbers and safe retries. `rename="true"` picks a free name instead; `rename="keep"` keeps the existing document.
 - In `create` content a `{xml(ref)}` does not become elements: create the document, then `change` append and `save`.
-- `<listen event="*" step="id"/>` in a `database` operation on a folder runs the step when any client adds, changes or removes a document there; `delay="ms"` gathers bursts.
+- `<listen event="*" step="id"/>` in a `database` operation on a folder runs the step when any client adds, changes or removes a document there.
+- `<listen event="Change" step="id" xpath="/root/items"/>` on a document runs the step when that node changes; `delay="ms"` gathers bursts there. A folder listen takes no delay.
 
 ## Searching
 

@@ -7,7 +7,7 @@
 - `type`: password | new-password | numeric | date | time | datetime-local
 - `value`, `default`, `required`, `pattern`, `pattern-error`, `error-message`, `warning-message`, `success-message`, `min-length`, `length`, `min` (YYYY-MM-DD, HH:MM, today()), `max` (YYYY-MM-DD, HH:MM, today()), `step`, `editable`, `autocomplete`, `focus`, `icon`, `toggleable`, `clearsearch`
 - actions: error, success, valid, warning
-- events: Blur, Change, Enter, Escape, Focus, IconSelect, Invalid, Select, Valid
+- events: Blur, Change, Enter, Escape, Focus, IconSelect, Invalid, Release, Select, Valid
 - methods: activate, clear
 
 ```xml

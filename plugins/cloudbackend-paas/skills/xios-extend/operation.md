@@ -2,7 +2,7 @@
 
 # A custom operation
 
-Declared per process (in each process that uses it), href relative to the process's file:
+Declared per process, href relative to the process's file:
 
 ```xml
 <process name="p1">
@@ -26,15 +26,16 @@ export async function slugify(process, context, op, evt) {
 }
 ```
 
-- `op`: a copy of the `<operation>` element. Its children's `{...}` are filled already, its own attributes are not: fill each with `await context.expr.evaluateText(op.getAttribute("x"), evt)`. `fn.noParse = 1` hands over the children unfilled.
+- `op`: a copy of the `<operation>` element. Its children's `{...}` are filled, its own attributes are not: fill each with `await context.expr.evaluateText(op.getAttribute("x"), evt)`. `fn.noParse = 1` hands over the process's own element, children unfilled: read it, never change it.
 - `evt`: the `value=` reference, resolved: `{...}` text gives `evt.value`; data (`#doc#/r/@t`) gives `evt.dataDoc` and `evt.xpath`, read with `new SYS_URL(evt.dataDoc).selectSingleText(evt.xpath)`.
 - Write a node: `new SYS_URL(evt.dataDoc).replaceText(text, xpath, null, context)`.
+- Another document: `await new SYS_URL(href).load(null, true)` first, or the select blocks the page.
 - `context`: the application instance: `getAlias(name)`, `setAlias(name, evt)`, `getView(name)`, `expr`. `process.error(msg)` logs.
 - Return a Promise (an `async` function does); the step waits for it. To fail, throw an Error as above: the step's `error=` step runs with its message (`!#/error/description`), else it is logged and the step goes on.
 
 ## Test
 
-As a function, with stubs: `slugify(process, context, el, evt)` with `el.getAttribute`, `context.expr.evaluateText` and `context.setAlias` stubbed; assert the alias, and that it rejects. In a running app: a trigger, then read `$slug`.
+As a function: `slugify(process, context, el, evt)` with `el.getAttribute`, `context.expr.evaluateText` and `context.setAlias` stubbed; assert the alias, and that it rejects. In a running app: a trigger, then read `$slug`.
 
 ## In xios-core
 
