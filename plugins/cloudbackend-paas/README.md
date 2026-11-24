@@ -4,12 +4,13 @@ Everything needed to build a XIOS/3 application and get it onto CloudBackend Paa
 install, one MCP server and six skills:
 
 - `cbemcp` — `upload_project` writes a project into the database, validating it against
-  the schema, `delete_files` removes files, and `deploy` publishes it. `whoami`,
+  the schema, and `delete_files` removes files. `whoami`,
   `list_projects`, `list_project_groups`, `read_project`, `validate_project` and
   `list_deployments` look at projects, project groups and deployments without changing
-  anything
-- the `xios-apps` skill — project layout, the manifest, the rules that make a deploy
-  fail, and when to ask before deploying or deleting
+  anything. There is no deploy tool: you deploy an application yourself from
+  CloudBackend PaaS
+- the `xios-apps` skill — project layout, the manifest, what an application needs before
+  it can be deployed, and when to ask before sharing or deleting
 - the XIOS skills from [skills.xios3.com](https://skills.xios3.com/), which teach the
   current XIOS/3 API: `xios-views` (views and the Core components, plus the XIOS
   validator), `xios-process` (processes, operations, expressions), `xios-theme` (themes

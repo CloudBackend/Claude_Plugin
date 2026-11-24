@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "cloudbackend-paas",
-      "description": "Build XIOS/3 applications and deploy them to CloudBackend PaaS: the upload and deploy tools, the PaaS workflow skill, and the XIOS skills with the XIOS validator",
+      "description": "Build XIOS/3 applications for CloudBackend PaaS: the project and upload tools, the PaaS workflow skill, and the XIOS skills with the XIOS validator",
       "author": {
         "name": "CloudBackend"
       },

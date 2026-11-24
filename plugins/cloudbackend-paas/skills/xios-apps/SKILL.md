@@ -1,16 +1,16 @@
 ---
 name: xios-apps
-description: Build or change a XIOS/3 application on CloudBackend PaaS - project layout, looking up components and operations before writing XML, finding and reading existing projects (home, tenant or a project group), then upload_project and deploy. Use whenever the task involves XIOS/3 views, processes, an application manifest (index.xml), or a project, project group or deployment on CloudBackend PaaS.
+description: Build or change a XIOS/3 application on CloudBackend PaaS - project layout, looking up components and operations before writing XML, finding and reading existing projects (home, tenant or a project group), then upload_project and validation. Deploying is done by the user in CloudBackend PaaS. Use whenever the task involves XIOS/3 views, processes, an application manifest (index.xml), or a project, project group or deployment on CloudBackend PaaS.
 ---
 
 # XIOS/3 applications
 
 The `cbemcp` server works with projects on CloudBackend PaaS: `whoami`, `list_projects`,
 `list_project_groups`, `read_project`, `validate_project` and `list_deployments` only read,
-`upload_project` and `delete_files` change a project in the database, and `deploy`
-publishes it. This skill
-covers getting a project onto CloudBackend PaaS; writing the XML is for the XIOS skills
-that ship alongside it.
+and `upload_project` and `delete_files` change a project in the database. There is no
+deploy tool: the user publishes an application from CloudBackend PaaS. This skill covers
+getting a project onto CloudBackend PaaS ready to deploy; writing the XML is for the XIOS
+skills that ship alongside it.
 
 ## Write the XML with the XIOS skills
 
@@ -50,8 +50,8 @@ processes/main.xml     root tag <process>
 locale/en_US.xml       optional
 ```
 
-Deploying needs the manifest at `index.xml`. It ties the files together, and references
-are relative to the project root:
+An application needs the manifest at `index.xml` to be deployed. It ties the files
+together, and references are relative to the project root:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -68,11 +68,11 @@ are relative to the project root:
 
 A project is in one of three places:
 
-| Where                          | Shared with              | `source_db` / `destination_db` | Published with |
-|--------------------------------|--------------------------|--------------------------------|----------------|
-| `home://Applications/<name>/`  | only the user            | `home` (the default)           | `deploy`       |
-| `tenant://Applications/<name>/`| everyone in the tenant   | `tenant`                       | `deploy`       |
-| `p<id>://Development/<name>/`  | the project group's members | `project`, with `project_group` | the Deployments board |
+| Where                          | Shared with              | `source_db` / `destination_db` | Deployed by the user from |
+|--------------------------------|--------------------------|--------------------------------|---------------------------|
+| `home://Applications/<name>/`  | only the user            | `home` (the default)           | CloudBackend PaaS         |
+| `tenant://Applications/<name>/`| everyone in the tenant   | `tenant`                       | CloudBackend PaaS         |
+| `p<id>://Development/<name>/`  | the project group's members | `project`, with `project_group` | the Deployments board in CloudBackend PaaS |
 
 A project group is a project in CloudBackend PaaS with a drive of its own, `p<id>://`.
 Most work now happens in project groups, so when the user names a project, look in all
@@ -94,10 +94,10 @@ The read-only tools are always safe to call, so use them instead of assuming:
 - `validate_project` to check files before uploading them. With `project_name`, files you
   do not send are read from the uploaded project, so one changed view can be checked
   against the rest.
-- `list_deployments` for an application's URL, or to tell the user what a deploy would
+- `list_deployments` for an application's URL, or to tell the user what deploying would
   replace. `whoami` for which user and tenant the tools act as.
 
-## Upload and deploy
+## Upload
 
 `upload_project` takes a `project_name` and a list of files with paths relative to the
 project root. It writes to `home://Applications/<project_name>/` by default,
@@ -120,34 +120,28 @@ reports a file that something still references.
 
 It validates by default: the manifest and everything reachable from it through
 `xlink:href` are checked against the schema, and other referenced files have to exist. A
-failure names the file and the reason, so fix and re-upload rather than deploying anyway.
+failure names the file and the reason, so fix and re-upload until it validates.
 
-`deploy` then publishes a home or tenant project. It refuses an app in a project group:
-the user moves that to Test, and from Test to Live, on the Deployments board in
-CloudBackend PaaS, which freezes and fingerprints the code. After uploading to a project
-group, tell the user that is the next step rather than offering to deploy. For `deploy`:
+## Deploying is for the user
 
-- `deployment_name` may only contain lowercase alphanumeric characters. If the project
-  name has capitals, a hyphen or a space, pass `deployment_name` explicitly, eg. project
-  `HelloWorld` deploys as `helloworld`.
-- Pass `source_db` (`home` or `tenant`) only when the same project name exists in more
-  than one place.
+The `cbemcp` server has no deploy tool, so Claude cannot publish an application. Once an
+upload validates, tell the user the project is ready and that they deploy it from
+CloudBackend PaaS: a home or tenant project from there, and an app in a project group by
+moving it to Test, and from Test to Live, on the Deployments board, which freezes and
+fingerprints the code. Say which project and where it was uploaded, and use
+`list_deployments` to say what is deployed now and would be replaced. Do not offer to
+deploy it yourself.
 
-Deploying requires `index.xml` with an `<application>` root tag; a project without one is
-just files in the database.
+A project needs `index.xml` with an `<application>` root tag to be deployed; without one
+it is just files in the database.
 
-## Ask before publishing or removing
+## Ask before sharing or removing
 
 Uploading is part of developing: it publishes nothing, so upload and re-upload as often as
-validation needs. Deploying and deleting are not, so check with the user first:
+validation needs. Sharing and deleting are not, so check with the user first:
 
-- Never call `deploy` unless the user asked for a deploy in this conversation or agreed to
-  one. After an upload validates, ask whether they want it deployed, and say which
-  deployment name it would get. A redeploy replaces the version that is live.
 - Ask before uploading with `destination_db: "tenant"`, since that shares the project with
   everyone in the tenant, and a deploy from there is public rather than private.
-- An earlier "yes, deploy it" covers that deploy, not every later change. Ask again after
-  further edits unless the user said to keep deploying.
 - Ask before uploading into or deleting from a project group the user did not name in
   this conversation: its members share its files, and what is uploaded becomes the
   project's code. If `list_project_groups` shows the user is not an Owner or
