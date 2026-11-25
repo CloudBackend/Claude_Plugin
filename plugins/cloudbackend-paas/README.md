@@ -3,9 +3,9 @@
 Everything needed to build a XIOS/3 application and get it onto CloudBackend PaaS. One
 install, one MCP server and six skills:
 
-- `cbemcp` — `upload_project` writes a project into the database, validating it against
-  the schema, and `delete_files` removes files. `whoami`,
-  `list_projects`, `list_project_groups`, `read_project`, `validate_project` and
+- `cbemcp` — `upload_project` writes a project into the database and `delete_files`
+  removes files; both validate the project against the schema unless told not to.
+  `whoami`, `list_projects`, `list_project_groups`, `read_project` and
   `list_deployments` look at projects, project groups and deployments without changing
   anything. There is no deploy tool: you deploy an application yourself from
   CloudBackend PaaS
@@ -18,7 +18,19 @@ install, one MCP server and six skills:
   (datatypes, folders and searching; still a draft upstream)
 
 The XIOS skills are what keep the XML from being guesswork. They ship as files inside the
-plugin, so they need no server and no login. The validator needs Node.js.
+plugin, so they need no server and no login.
+
+## Node.js is optional
+
+Everything works without Node.js: `cbemcp` checks projects against the schema when it
+uploads them. For the full experience install [Node.js](https://nodejs.org) 18 or later,
+which lets Claude run the XIOS validator on each file before uploading (it catches
+attributes the schema lets through) and the xios-theme checks. Nothing else needs
+installing; the validator has its dependencies bundled.
+
+A session-start hook checks for Node.js. Without it, the first session after installing
+the plugin shows a one-time note asking you to install it, and Claude skips the Node.js
+steps instead of failing on them. Restart Claude Code after installing Node.js.
 
 If you installed the standalone `xios` plugin from skills.xios3.com into
 `~/.claude/skills/xios/`, remove it, or the same skills load twice.

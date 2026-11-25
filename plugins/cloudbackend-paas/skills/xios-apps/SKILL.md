@@ -6,7 +6,7 @@ description: Build or change a XIOS/3 application on CloudBackend PaaS - project
 # XIOS/3 applications
 
 The `cbemcp` server works with projects on CloudBackend PaaS: `whoami`, `list_projects`,
-`list_project_groups`, `read_project`, `validate_project` and `list_deployments` only read,
+`list_project_groups`, `read_project` and `list_deployments` only read,
 and `upload_project` and `delete_files` change a project in the database. There is no
 deploy tool: the user publishes an application from CloudBackend PaaS. This skill covers
 getting a project onto CloudBackend PaaS ready to deploy; writing the XML is for the XIOS
@@ -26,17 +26,22 @@ current API it lists:
 | a new component or operation of your own             | `xios-extend`  |
 | records on `tenant://`, `home://` or a group drive   | `xios-db`      |
 
-Check each file before uploading it with the validator that ships with `xios-views`:
+If Node.js is installed, check each file before uploading it with the validator that
+ships with `xios-views`:
 
 ```
 node <xios-views skill folder>/validator/cli.js <file.xml>
 ```
 
-It needs only Node.js. The `xios-views` skill lists forms it wrongly reports as errors;
-`validate_project` is the schema check that counts for an upload.
+It catches unknown attributes that the schema lets through, and the `xios-views` skill
+lists forms it wrongly reports as errors. Node.js is optional: the plugin's session-start
+note says whether it is installed. Without it, skip the validator and the other node, npm
+or npx steps in the XIOS skills, and tell the user once that installing Node.js adds them.
+The schema check `upload_project` does needs nothing installed.
 
 If something is not in the skills, say so rather than guessing at attribute names: upload
-validates against the schema and a guess usually comes back as a validation failure.
+validates against the schema by default, and a guess usually comes back as a validation
+failure.
 
 ## Project layout
 
@@ -91,9 +96,6 @@ The read-only tools are always safe to call, so use them instead of assuming:
 - `read_project` to change a project that is not on disk. Without `paths` it lists the
   files; with `paths` it returns them in the same `{path, content, encoding}` form
   `upload_project` takes, so a file can be edited and sent back as is.
-- `validate_project` to check files before uploading them. With `project_name`, files you
-  do not send are read from the uploaded project, so one changed view can be checked
-  against the rest.
 - `list_deployments` for an application's URL, or to tell the user what deploying would
   replace. `whoami` for which user and tenant the tools act as.
 
@@ -115,12 +117,15 @@ Images, fonts and other binary files go in the same call: send the content as ba
 `encoding: "base64"`. A binary file sent as text is refused.
 
 Uploading never removes anything, so after renaming or dropping a file, remove the old one
-with `delete_files`. It deletes files, not folders, and validates what is left, so it
-reports a file that something still references.
+with `delete_files`. It deletes files, not folders, and by default validates what is
+left, so it reports a file that something still references.
 
-It validates by default: the manifest and everything reachable from it through
+Both tools validate by default: the manifest and everything reachable from it through
 `xlink:href` are checked against the schema, and other referenced files have to exist. A
-failure names the file and the reason, so fix and re-upload until it validates.
+failure names the file and the reason, so fix and re-upload until it validates. Validation
+is optional: pass `validate: false` to skip it, for example while uploading a project in
+parts whose manifest refers to files not sent yet. Validate before telling the user the
+project is ready to deploy.
 
 ## Deploying is for the user
 

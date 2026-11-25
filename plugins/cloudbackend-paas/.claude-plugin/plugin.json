@@ -1,7 +1,7 @@
 {
   "name": "cloudbackend-paas",
-  "description": "Build XIOS/3 applications for CloudBackend PaaS: the project and upload tools, the PaaS workflow skill, and the XIOS skills (views, processes, themes, extensions, data) with the XIOS validator",
-  "version": "1.6.0",
+  "description": "Build XIOS/3 applications for CloudBackend PaaS: the project and upload tools, the PaaS workflow skill, and the XIOS skills (views, processes, themes, extensions, data) with the XIOS validator, which uses Node.js if it is installed",
+  "version": "1.7.0",
   "author": {
     "name": "CloudBackend"
   },
